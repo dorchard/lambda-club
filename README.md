@@ -6,5 +6,5 @@ https://lists.kent.ac.uk/sympa/modindex/lambda-club
 
 Index of content, in reverse chronological order
 
-<folder>, <presenter>, <date> 
+[folder], [presenter], [date]
 hask-num-class, Dominic Orchard, 23/11/2016
