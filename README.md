@@ -8,6 +8,7 @@ Index of content, in reverse chronological order
 
 | [folder]       | [presenter]     | [date]     | [title]                                         |
 | -------------  | --------------- | ---------- | ----------------------------------------------- |
-| alg-data-types | Li-yao Xia      | 30/11/2016 | Crafting types so programs can't go wrong       |
+| ?              | Dominic Orchard | 07/12/2016 | F# and units-of-measure types: or How To Not Blow-Up a $200million Spaceship |  
+| alg-data-types | Li-yao Xia      | 30/11/2016 | Crafting types so programs can't go wrong       |
 | hask-num-class | Dominic Orchard | 23/11/2016 | 2+2=5: Exploring Haskell's overloaded numerics  |
 
