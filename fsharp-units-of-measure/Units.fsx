@@ -50,7 +50,7 @@ let v = x / t
 // let bad = v + x
 
 // Unit-polymorphic squaring
-let square (x : float<'u>) = x * x // type annotation note needed : float<'u ^ 2>
+let square (x : float<'u>) = x * x // type annotation not needed : float<'u ^ 2>
 
 let z = x / x : float<1> // Dimensionless unit
 
