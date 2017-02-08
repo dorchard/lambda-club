@@ -1,0 +1,15 @@
+Programming Competitions that Allow Funcational Languages
+  - yearly
+    - facebook hackercup
+    - google codejam
+    - google hashcode
+    - ipsc (https://ipsc.ksp.sk/)
+    - icfpc
+  - weekly/monthly with pb archive
+    - project euler
+    - spoj
+    - codeforces
+    - hackerrank
+for more, see petr's blog
+  http://petr-mitrichev.blogspot.com/
+
