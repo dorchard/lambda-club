@@ -8,6 +8,7 @@ Index of content, in reverse chronological order
 
 | [folder]       | [presenter]     | [date]     | [title]                                         |
 | -------------  | --------------- | ---------- | ----------------------------------------------- |
+| game-of-kyles  | -               | 22/02/2017 | Pair programming: Game of Kyles problem         |
 | competitions       | Radu Grigore     | 08/02/2017 | Programming Competitions and Functional Programming |
 | coq-curry-howard         | Hugo Férée     | 14/12/2016 | Proof as programs / Programs as proofs and Extraction in Coq |
 | fsharp-units-of-measure | Dominic Orchard | 07/12/2016 | F# and units-of-measure types: or How To Not Blow-Up a $200million Spaceship |  
