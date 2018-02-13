@@ -8,7 +8,7 @@ Index of content, in reverse chronological order
 
 | [folder]       | [presenter]     | [date]     | [title]                                         |
 | -------------  | --------------- | ---------- | ----------------------------------------------- |
-| memo           | Dominic Orchard | 13/02/2018 | Memoising recursive functions: or being lazy to be fast |
+| memoize        | Dominic Orchard | 13/02/2018 | Memoising recursive functions: or being lazy to be fast |
 | sierpinski     | -               | 01/03/2017 | Functions and fractals: Sierpinski triangles    |
 | game-of-kyles  | -               | 22/02/2017 | Pair programming: Game of Kyles problem         |
 | competitions       | Radu Grigore     | 08/02/2017 | Programming Competitions and Functional Programming |
