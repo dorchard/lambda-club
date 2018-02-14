@@ -37,13 +37,25 @@ fibMemoArray = tblLookup
         mapM_ (\i -> writeArray arr i (fibUnfix tblLookup i)) [0..maxSize]
         return arr
 
+fibzip n = table !! n
+  where table = 0 : 1 : zipWith (+) table (tail table)
+
+tabulate :: Ix i => (i, i) -> (i -> e) -> Array i e
+tabulate bounds f = array bounds [(i, f i) | i <- range bounds]
+
+dp :: Ix i => (i, i) -> ((i -> e) -> (i -> e)) -> (i -> e)
+dp bounds f = (memo!)
+  where memo = tabulate bounds (f (memo!))
+
+fibDp n = dp (0,n) fibUnfix
+
 -- Criterion code
 -- ghc -O2 --make fib.hs
 -- ./fib -o fib-results.html
 main =
   defaultMain
     [  bgroup "fib" $
-         map (\size -> bench ("fib/" ++ show size) $ whnf fibMemoArray size) sizes
-      ++ map (\size -> bench ("fibMemo/" ++ show size) $ whnf fibMemo size) sizes
+         map (\size -> bench ("fibMemoArray/" ++ show size) $ whnf fibMemoArray size) sizes
+      ++ map (\size -> bench ("fibDp/" ++ show size) $ whnf fibDp size) sizes
     ]
   where sizes = [5000,10000..30000]
