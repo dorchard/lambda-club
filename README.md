@@ -8,7 +8,7 @@ Index of content, in reverse chronological order
 
 | [folder]       | [presenter]     | [date]     | [title]                                         |
 | -------------  | --------------- | ---------- | ----------------------------------------------- |
-| ocaml-intro    | Simon Cooksey   | 20/02/2018 | Introduction to OCaml (via an expression interpreter |
+| ocaml-intro    | Simon Cooksey   | 20/02/2018 | Introduction to OCaml (via an expression interpreter) |
 | memoize        | Dominic Orchard | 13/02/2018 | Memoising recursive functions: or being lazy to be fast |
 | sierpinski     | -               | 01/03/2017 | Functions and fractals: Sierpinski triangles    |
 | game-of-kyles  | -               | 22/02/2017 | Pair programming: Game of Kyles problem         |
