@@ -1,0 +1,6 @@
+const : forall (a : Type, b : Type) . a -> Box b -> a
+const x yBoxed = let |y| = yBoxed in x
+
+dup : forall (a : Type) . Box a -> (a, a)
+dup xBoxed = let |x| = xBoxed in (x, x)
+
