@@ -11,6 +11,7 @@ Index of content, in reverse chronological order
 |                | Will Hendy      | 03/04/2018 | Overview of paper: [Disjoint Intersection Types](http://i.cs.hku.hk/~bruno/papers/icfp2016.pdf) |
 |                | Vilem Liepelt   | 27/03/2018 | Overview of paper: [L3 : A Linear Language with Locations](https://pdfs.semanticscholar.org/b709/8321200d71320a2bce7477e78c32784fd8e9.pdf) |
 | ocaml-intro    | Simon Cooksey   | 20/02/2018 | Introduction to OCaml (via an expression interpreter) |
+|                | Dominic Orchard | 27/02/2018 | An introduction to the linear lambda calculus and linear types |
 | memoize        | Dominic Orchard | 13/02/2018 | Memoising recursive functions: or being lazy to be fast |
 | sierpinski     | -               | 01/03/2017 | Functions and fractals: Sierpinski triangles    |
 | game-of-kyles  | -               | 22/02/2017 | Pair programming: Game of Kyles problem         |
