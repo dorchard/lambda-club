@@ -8,7 +8,7 @@ Index of content, in reverse chronological order
 
 | [folder]       | [presenter]     | [date]     | [title]                                         |
 | -------------  | --------------- | ---------- | ----------------------------------------------- |
-|                | Will Hendy      | 03/04/2018 | Overview of paper: "Disjoint Intersection Types" |
+|                | Will Hendy      | 03/04/2018 | Overview of paper: [Disjoint Intersection Types](http://i.cs.hku.hk/~bruno/papers/icfp2016.pdf) |
 |                | Vilem Liepelt   | 27/03/2018 | Overview of paper: "L3 : A Linear Language with Locations" |
 | ocaml-intro    | Simon Cooksey   | 20/02/2018 | Introduction to OCaml (via an expression interpreter) |
 | memoize        | Dominic Orchard | 13/02/2018 | Memoising recursive functions: or being lazy to be fast |
