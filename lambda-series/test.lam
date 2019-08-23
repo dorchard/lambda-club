@@ -1,0 +1,2 @@
+one = \x -> x
+two = \f -> \x -> f (f x)

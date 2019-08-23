@@ -1,0 +1,38 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 9bf114adad716a1454d787de970fb46d6419edde7e801f692aa9e22b65c61274
+
+name:           lambda-core
+version:        0.1
+synopsis:       Simple language
+author:         Dominic Orchard
+copyright:      2019 authors
+license:        BSD3
+build-type:     Simple
+
+executable lcore
+  main-is: Main.hs
+  other-modules:
+      Lam.FirstParameter
+      Lam.Lexer
+      Lam.Parser
+      Lam.Syntax
+      Paths_lambda_core
+  hs-source-dirs:
+      ./.
+  ghc-options: -O0 -Wall -Werror -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -Wno-unused-matches -Wno-name-shadowing -Wno-type-defaults -main-is Lam
+  build-tools:
+      alex
+    , happy
+  build-depends:
+      array
+    , base >=4.10 && <5
+    , directory
+    , filepath
+    , text
+    , transformers
+  default-language: Haskell2010
