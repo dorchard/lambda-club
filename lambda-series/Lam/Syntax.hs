@@ -12,23 +12,14 @@ data Expr ex =
   | Var Id
   -- Extend the ast at this point
   | Ext ex
-  deriving Show
-
--- Top-level definitions
-data Def ex =
-  Def Id (Expr ex)
-  deriving Show
-
--- Programs
-type Program ex = [Def ex]
+  deriving (Show, Eq)
 
 ----------------------------
--- Arithmetic and conditional expressions
+-- Extend the language with arithmetic and conditional expressions
+-- (For later)
 
 data Arith ex =
     BinOp String (Expr (Arith ex)) (Expr (Arith ex))
   | Conditional (Expr (Arith ex)) (Expr (Arith ex)) (Expr (Arith ex))
   | Constant Int
-  deriving Show
-
-data Hole = Hole
+  deriving (Show, Eq)

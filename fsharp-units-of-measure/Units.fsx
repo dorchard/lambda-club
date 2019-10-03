@@ -52,6 +52,25 @@ let v = x / t
 // Unit-polymorphic squaring
 let square (x : float<'u>) = x * x // type annotation not needed : float<'u ^ 2>
 
+let y = 4.0<m>
+let w = 3.0
+let v0' = y + w
+
+let a = 5.0<m>
+let b = a * 4.5
+
+
+let rec scalarMult (x : float<'u>, n : int) =
+    if n < 0 then 0.0<_>
+    else x + scalarMult (x, n - 1)
+
+
+let y' = 4.0<1>
+let v0'' = y' + w
+
+let square' (x : float, y : float<'u>) = x * y
+
+
 let z = x / x : float<1> // Dimensionless unit
 
 // The following demonstrates that float and float<1> are 

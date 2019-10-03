@@ -56,19 +56,19 @@ import Lam.Syntax
 %left '*'
 %%
 
-Program :: { Program (Arith ()) }
+Program :: { Expr (Arith ()) }
   : Defs                                        { $1 }
 
-Defs :: { [Def (Arith ())] }
-  : Def NL Defs               { $1 : $3 }
-  | Def                       { [$1] }
+Defs :: { Expr (Arith ()) }
+  : Def NL Defs               { $1 $3 }
+  | Expr                      { $1 }
 
 NL :: { () }
   : nl NL                     { }
   | nl                        { }
 
-Def :: { Def (Arith ()) }
-  : VAR '=' Expr { Def (symString $1) $3 }
+Def :: { Expr (Arith ()) -> Expr (Arith ()) }
+  : VAR '=' Expr { \e -> App (Abs (symString $1) e) $3 }
 
 Expr :: { Expr (Arith ()) }
   : let VAR '=' Expr in Expr
@@ -117,7 +117,7 @@ parseError t  =  do
     lift . Left $ file <> ":" <> show l <> ":" <> show c <> ": parse error"
   where (l, c) = getPos (head t)
 
-parseProgram :: FilePath -> String -> Either String (Program (Arith ()))
+parseProgram :: FilePath -> String -> Either String (Expr (Arith ()))
 parseProgram file input = runReaderT (program $ scanTokens input) file
 
 failWithMsg :: String -> IO a

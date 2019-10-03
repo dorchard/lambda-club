@@ -1,6 +1,8 @@
 module Lam where
 
-import Lam.Parser
+import Lam.Parser      (parseProgram)
+import Lam.PrettyPrint (pprint)
+import Lam.Semantics   (multiStep)
 
 import System.Directory (doesPathExist)
 import System.Environment (getArgs)
@@ -22,5 +24,11 @@ main = do
           input <- readFile fname
           putStrLn input
           case parseProgram fname input of
-            Right ast -> putStrLn $ "AST: " <> show ast
+            Right ast -> do
+              -- Show AST
+              putStrLn $ "\n AST: " <> show ast
+              -- Pretty print
+              putStrLn $ "\n Pretty: " <> show (pprint ast)
+              -- Evaluate
+              putStrLn $ "\n Normal form: " <> show (multiStep ast)
             Left msg -> error msg
