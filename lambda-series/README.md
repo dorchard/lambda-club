@@ -1,6 +1,13 @@
-Programme: creating your own language with the lambda calculus as the core.
+# Creating your own language with the lambda calculus as the core.
 
-Rough idea for the list of topics:
+## Implementation
+
+Build and install using stack via `stack install`.
+
+Get stack here: http://docs.haskellstack.org/en/stable/README/
+(will automatically pull in GHC and all the requirements for you).
+
+## Rough idea for the list of topics:
     
  - Session 1: Intro to the syntax and concepts of the lambda calculus, 
     including operational semantics.
