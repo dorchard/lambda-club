@@ -28,7 +28,7 @@ smallStep (Abs x e) =
 smallStep (Ext _) = Nothing
 
 -- `substitute e (x, e')` means e[e'/x]
-substitute :: Expr t -> (Id, Expr t) -> Expr t
+substitute :: Expr t -> (Identifier, Expr t) -> Expr t
 substitute (Var y) (x, e')
   | x == y = e'
   | otherwise = Var y
