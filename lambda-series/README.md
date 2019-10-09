@@ -7,6 +7,10 @@ Build and install using stack via `stack install`.
 Get stack here: http://docs.haskellstack.org/en/stable/README/
 (will automatically pull in GHC and all the requirements for you).
 
+## Example programs
+
+See `simple.lam` and `test.lam`.
+
 ## Rough idea for the list of topics:
     
  - Session 1: Intro to the syntax and concepts of the lambda calculus, 
