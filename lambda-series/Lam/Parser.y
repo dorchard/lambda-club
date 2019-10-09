@@ -68,7 +68,7 @@ NL :: { () }
   | nl                        { }
 
 Def :: { Expr (Arith ()) -> Expr (Arith ()) }
-  : VAR '=' Expr { \e -> App (Abs (symString $1) e) $3 }
+  : VAR '=' Expr { \program -> App (Abs (symString $1) program) $3 }
 
 Expr :: { Expr (Arith ()) }
   : let VAR '=' Expr in Expr

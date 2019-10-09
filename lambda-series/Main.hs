@@ -28,7 +28,7 @@ main = do
               -- Show AST
               putStrLn $ "\n AST: " <> show ast
               -- Pretty print
-              putStrLn $ "\n Pretty: " <> show (pprint ast)
+              putStrLn $ "\n Pretty: " <> pprint ast
               -- Evaluate
-              putStrLn $ "\n Normal form: " <> show (multiStep ast)
+              putStrLn $ "\n Normal form: " <> pprint (multiStep ast)
             Left msg -> error msg
