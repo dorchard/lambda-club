@@ -9,6 +9,8 @@ Index of content, in reverse chronological order
 
 | [folder]       | [presenter]     | [date]     | [title]                                         |
 | -------------  | --------------- | ---------- | ----------------------------------------------- |
+| lambda-series  | Dominic Orchard | 16/10/2019 | Lambda seires 3: Church encodings and the Y combinator |
+| lambda-series  | Dominic Orchard | 09/10/2019 | Lambda series 2: An implementation based on the small-step semantics |
 | lambda-series  | Dominic Orchard | 02/10/2019 | Lambda series 1: Syntax and operational semantics |
 |                | Will Hendy      | 03/04/2018 | Overview of paper: [Disjoint Intersection Types](http://i.cs.hku.hk/~bruno/papers/icfp2016.pdf) |
 |                | Vilem Liepelt   | 27/03/2018 | Overview of paper: [L3 : A Linear Language with Locations](https://pdfs.semanticscholar.org/b709/8321200d71320a2bce7477e78c32784fd8e9.pdf) |
