@@ -1,0 +1,21 @@
+--- Boolean values
+true = \a -> \b -> a
+false = \a -> \b -> b
+
+--- Basic operations
+isTrue = \n -> n true false
+isFalse = \n -> n (\x -> false) true
+
+-- Logic gates (left-to-right evaluation, using true, no gate re-uses)
+-- (no short-circuiting in XOR/XNOR)
+not = \a -> isTrue a false true
+and = \a -> \b -> isTrue a (isTrue b true false) false
+or = \a -> \b -> isTrue (not a) (isTrue (not b) false true) true
+nand = \a -> \b -> isTrue a (isTrue b false true) true
+nor = \a -> \b -> isTrue a false (isTrue b false true)
+xor = \a -> \b -> isTrue a (isTrue b false true) (isTrue b true false)
+xnor = \a -> \b -> isTrue a (isTrue b true false) (isTrue b false true)
+
+--------------------------------------------------------------------------------
+
+xnor false false
