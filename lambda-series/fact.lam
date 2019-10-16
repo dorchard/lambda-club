@@ -1,0 +1,45 @@
+-- Factorial
+-- fact n = if (n == 0) then 1 else n * fact (n - 1)
+
+-- Some numbers
+zero  = \f -> \x -> x
+one   = \f -> \x -> f x
+two   = \f -> \x -> f (f x)
+three = \f -> \x -> f (f (f x))
+four  = \f -> \x -> f (f (f (f x)))
+
+-- Don't need this but for reference
+plus = \n -> \m -> (\f -> \x -> n f (m f x))
+
+mult = \n -> \m -> (\f -> \x -> n (m f) x)
+
+pred = \n -> \f -> \x -> n (\g -> \h -> h (g f)) (\u -> x) (\u -> u)
+
+-- Booleans
+true = \a -> \b -> a
+false = \a -> \b -> b
+
+-- Predicate
+isZero = \n -> n (\x -> false) true
+
+-- e.g.,
+-- isZero one
+--  = isZero (\f -> \x -> f x)
+--  -> (\f -> \x -> f x) (\x -> false) true
+--  -> (\x -> (\x -> false) x) true
+--  --> (\x -> false) true
+--  --> false
+
+-- isZero zero
+--  = isZero (\f -> \x -> x)
+--  ->  (\f -> \x -> x) (\x -> false) true
+--  ->  (\x -> x) true
+--  ->  true
+
+-- Curry's fix point (Y combinator)
+y = \r -> (\f -> r (f f)) (\f -> r (f f))
+
+-- Factorial
+fact = y (\fact' -> \n -> isZero n one (mult n (fact' (pred n))))
+
+fact (plus one four)
