@@ -1,0 +1,31 @@
+-- Some Church numerals
+zero  = \f -> \x -> x
+one   = \f -> \x -> f x
+two   = \f -> \x -> f (f x)
+three = \f -> \x -> f (f (f x))
+four  = \f -> \x -> f (f (f (f x)))
+
+-- Algebraic operations on Church numerals
+plus = \n -> \m -> (\f -> \x -> n f (m f x))
+mult = \n -> \m -> (\f -> \x -> n (m f) x)
+pred = \n -> \f -> \x -> n (\g -> \h -> h (g f)) (\u -> x) (\u -> u)
+
+-- Useful Boolean logic
+true = \a -> \b -> a
+false = \a -> \b -> b
+isZero = \n -> n (\x -> false) true
+
+-- Curry's fix point (Y combinator)
+y = \r -> (\f -> r (f f)) (\f -> r (f f))
+
+--------------------------------------------------------------------------------
+
+-- Factorial
+fact = y (\fact' -> \n -> isZero n one (mult n (fact' (pred n))))
+
+-- Fibonacci (get Fibonacci number at index n)
+fib = y (\fib' -> \n -> isZero n zero (isZero (pred n) one (plus (fib' (pred n)) (fib' (pred (pred n))))))
+
+--------------------------------------------------------------------------------
+
+fib (plus two four)
