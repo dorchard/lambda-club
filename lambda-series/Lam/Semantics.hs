@@ -15,7 +15,7 @@ smallStep (App e1 e2) =
   case smallStep e1 of
     -- App L rule
     Just e1' -> Just (App e1' e2)
-    Nothing -> 
+    Nothing ->
       case smallStep e2 of
         Nothing -> Nothing
         -- App R rule
@@ -54,11 +54,14 @@ substitute (Abs y e) (x, e')
 substitute (Ext e) _ = Ext e
 
 -- Keep doing small step reductions until normal form reached
-multiStep :: Expr t -> Expr t
-multiStep t =
+multiStep :: Expr t -> (Expr t, Int)
+multiStep e = multiStep' e 0
+
+multiStep' :: Expr t -> Int -> (Expr t, Int)
+multiStep' t n =
     case smallStep t of
       -- Normal form reached
-      Nothing -> t
+      Nothing -> (t, n)
       -- Can do more reduction
-      Just t' -> multiStep t'
+      Just t' -> multiStep' t' (n+1)
 

@@ -33,7 +33,6 @@ tokens :-
   $eol+                         { \p s -> TokenNL p }
   $white+                       ;
   "--".*                        ;
-  "{-" (\\.|[^\{\-]|\n)* "-}"   ;
   @constr                       { \p s -> TokenConstr p s }
   let                           { \p s -> TokenLet p }
   in                            { \p s -> TokenIn p }

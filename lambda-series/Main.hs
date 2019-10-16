@@ -22,7 +22,6 @@ main = do
         else do
           -- Read the file, parse, and do something...
           input <- readFile fname
-          putStrLn input
           case parseProgram fname input of
             Right ast -> do
               -- Show AST
@@ -30,5 +29,7 @@ main = do
               -- Pretty print
               putStrLn $ "\n Pretty: " <> pprint ast
               -- Evaluate
-              putStrLn $ "\n Normal form: " <> pprint (multiStep ast)
+              let (normalForm, count) = multiStep ast
+              putStrLn $ "\n Number of steps: " <> show count
+              putStrLn $ "\n Normal form: " <> pprint normalForm
             Left msg -> error msg
