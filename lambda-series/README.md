@@ -17,8 +17,8 @@ See `simple.lam` and `test.lam`.
     including operational semantics.
     
  - Session 2: A first implementation: parsing, printing, and interpreting 
-    the lambda calculus (written in Haskell)
- - Session 3: Church encodings (natural numbers, booleans, recursion) and some playing with the implementation.
+    the lambda calculus (written in Haskell) [video (Kent only)](https://kent.cloud.panopto.eu/Panopto/Pages/Viewer.aspx?id=7d6df6a1-c4b7-42e2-a4b3-aae100d89b17)
+ - Session 3: Church encodings (natural numbers, booleans, recursion) and some playing with the implementation. [video (Kent only)](https://kent.cloud.panopto.eu/Panopto/Pages/Viewer.aspx?id=6ff8fedf-125b-40bf-86f3-aae8010b4383)
  - Session 4: Formally defining a type system via the simply-typed lambda 
     calculus
  - Session 5: Algorithmically defining a type system: type checking and 
