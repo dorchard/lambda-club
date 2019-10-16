@@ -7,6 +7,9 @@ one   = \f -> \x -> f x
 two   = \f -> \x -> f (f x)
 three = \f -> \x -> f (f (f x))
 four  = \f -> \x -> f (f (f (f x)))
+five  = \f -> \x -> f (f (f (f (f x))))
+six   = \f -> \x -> f (f (f (f (f (f x)))))
+seven = \f -> \x -> f (f (f (f (f (f (f x))))))
 
 -- Don't need this but for reference
 plus = \n -> \m -> (\f -> \x -> n f (m f x))
@@ -42,4 +45,12 @@ y = \r -> (\f -> r (f f)) (\f -> r (f f))
 -- Factorial
 fact = y (\fact' -> \n -> isZero n one (mult n (fact' (pred n))))
 
-fact (plus one four)
+-- fact one   = 47 steps
+-- fact two   = 146 steps
+-- fact three = 672 steps
+-- fact four  = 3930 steps
+-- fact five  = 27120 steps
+-- fact six   = 214260 steps
+-- fact seven = 1905822 steps
+
+fact four
