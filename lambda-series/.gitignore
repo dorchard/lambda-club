@@ -1,0 +1,3 @@
+# Igore Stack stuff
+.stack-work/
+stack.yaml.lock
