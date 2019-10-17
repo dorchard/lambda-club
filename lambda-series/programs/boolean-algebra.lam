@@ -3,18 +3,17 @@ true = \a -> \b -> a
 false = \a -> \b -> b
 
 --- Basic operations
-isTrue = \n -> n true false
+isTrue = \n -> n true false -- this is in fact an identity for booleans
 isFalse = \n -> n (\x -> false) true
 
--- Logic gates (left-to-right evaluation, using true, no gate re-uses)
--- (no short-circuiting in XOR/XNOR)
-not = \a -> isTrue a false true
-and = \a -> \b -> isTrue a (isTrue b true false) false
-or = \a -> \b -> isTrue (not a) (isTrue (not b) false true) true
-nand = \a -> \b -> isTrue a (isTrue b false true) true
-nor = \a -> \b -> isTrue a false (isTrue b false true)
-xor = \a -> \b -> isTrue a (isTrue b false true) (isTrue b true false)
-xnor = \a -> \b -> isTrue a (isTrue b true false) (isTrue b false true)
+-- Logic gates
+not = \ b -> b false true
+and = \ b1 -> \ b2 -> b1 b2 false -- or b1 b2 b1
+or = \ b1 -> \ b2 -> b1 true b2 -- or b1 b1 b2
+nand = \ b1 -> \ b2 -> b1 (not b2) true -- or not (and b1 b2)
+nor = \ b1 -> \ b2 -> b1 false (not b2)
+xor = \ b1 -> \ b2 -> b1 (not b2) b2
+xnor = \ b1 -> \ b2 -> b1 b2 (not b2)
 
 --------------------------------------------------------------------------------
 
