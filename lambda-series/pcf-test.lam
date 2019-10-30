@@ -1,12 +1,6 @@
 lang.pcf
 lang.typed
 
-simple = zero
+id = (\x -> x) : Nat -> Nat
 
---id : Nat -> Nat
-id = \x -> x
-
--- k : Nat -> (Nat -> Nat)
-k = \x -> \y -> x
-
-id (k simple)
+(id zero) : Nat

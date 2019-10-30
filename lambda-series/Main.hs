@@ -3,9 +3,12 @@ module Lam where
 import Lam.Parser      (parseProgram)
 import Lam.PrettyPrint (pprint)
 import Lam.Semantics   (multiStep)
+import Lam.Syntax      (isTyped)
+import Lam.Types
 
-import System.Directory (doesPathExist)
+import System.Directory   (doesPathExist)
 import System.Environment (getArgs)
+import Control.Monad      (when)
 
 main :: IO ()
 main = do
@@ -32,4 +35,9 @@ main = do
               let (normalForm, count) = multiStep ast
               putStrLn $ "\n Number of steps: " <> show count
               putStrLn $ "\n Normal form: " <> pprint normalForm
+              -- Typing
+              when (isTyped options)
+                  (case synth [] ast of
+                     Nothing -> putStrLn "\n Not well-typed!"
+                     Just ty -> putStrLn $ "\n Type is: " <> pprint ty)
             Left msg -> error msg

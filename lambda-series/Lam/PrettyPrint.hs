@@ -26,6 +26,7 @@ instance PrettyPrint ex => PrettyPrint (Expr ex) where
       bracket_pprint (Abs var e1) ++ " " ++ bracket_pprint e2
     pprint (App e1 e2) = pprint e1 ++ " " ++ bracket_pprint e2
     pprint (Var var) = var
+    pprint (Sig e t) = pprint e ++ " : (" ++ pprint t ++ ")"
     pprint (Ext e) = pprint e
 
 instance PrettyPrint PCF where
@@ -37,3 +38,11 @@ instance PrettyPrint PCF where
 
 instance PrettyPrint () where
     pprint () = "()"
+
+instance PrettyPrint Type where
+    isLexicallyAtomic NatTy = True
+    isLexicallyAtomic _     = False
+
+    pprint NatTy = "Nat"
+    pprint (FunTy tyA tyB) =
+      "(" ++ pprint tyA ++ " -> " ++ pprint tyB ++ ")"

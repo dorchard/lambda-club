@@ -44,10 +44,10 @@ import Lam.Syntax
 %%
 
 Program :: { (Expr PCF, [Option]) }
-  : Langs Defs  { ($2 $1, $1) }
+  : LangOpts Defs  { ($2 $1, $1) }
 
-Langs :: { [Option] }
-  : LANG nl Langs       { (readOption $1) : $3 }
+LangOpts :: { [Option] }
+  : LANG nl LangOpts    { (readOption $1) : $3 }
   | {- empty -}         { [] } 
 
 Defs :: { [Option] -> Expr PCF }
@@ -69,13 +69,21 @@ Expr :: { [Option] -> Expr PCF }
     { \opts -> Abs (symString $2) ($4 opts) }
 
   | succ '(' Expr ')'
-    { \opts -> 
+    { \opts ->
         if isPCF opts
           then Ext (Succ ($3 opts))
           else App (Var "succ") ($3 opts) }
 
+  | Expr ':' Type  { \opts -> Sig ($1 opts) $3 }
+
   | Juxt
     { $1 }
+
+Type :: { Type }
+Type
+  : CONSTR           { if constrString $1 == "Nat" then NatTy else error "What?" }
+  | Type '->' Type   { FunTy $1 $3 }
+  | '(' Type ')'     { $2 }
 
 Juxt :: { [Option] -> Expr PCF }
   : Juxt Atom                 { \opts -> App ($1 opts) ($2 opts) }
@@ -84,7 +92,7 @@ Juxt :: { [Option] -> Expr PCF }
 Atom :: { [Option] -> Expr PCF }
   : '(' Expr ')'              { $2 }
   | VAR                       { \_ -> Var (symString $1) }
-  | zero                     
+  | zero
      {\opts ->
           if isPCF opts
             then Ext Zero

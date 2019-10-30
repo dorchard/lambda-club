@@ -25,6 +25,8 @@ smallStep (Abs x e) =
   case smallStep e of
     Just e' -> Just (Abs x e')
     Nothing -> Nothing
+
+smallStep (Sig e _) = smallStep e
 smallStep (Ext _) = Nothing
 
 -- `substitute e (x, e')` means e[e'/x]
@@ -40,7 +42,7 @@ substitute (Abs y e) (x, e')
   -- Name clash in lambda abstraction
   | x == y = Abs y e
   -- If e' contains y (then we have to be super careful)
-  | y `Set.member` free_vars e' = 
+  | y `Set.member` free_vars e' =
     let y' = fresh_var y (free_vars e' `Set.union` free_vars e)
     in Abs y' (substitute (substitute e (y, Var y')) (x, e'))
 
@@ -49,6 +51,8 @@ substitute (Abs y e) (x, e')
 
   -- No name clash
   | otherwise = Abs y (substitute e (x, e'))
+
+substitute (Sig e t) s = Sig (substitute e s) t
 
 -- Ext case we are ignoring
 substitute (Ext e) _ = Ext e

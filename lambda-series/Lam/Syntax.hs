@@ -15,6 +15,8 @@ data Expr ex where
     App :: Expr ex ->  Expr ex   -> Expr ex -- e1 e2
     Var :: Identifier            -> Expr ex -- x
 
+    Sig :: Expr ex -> Type       -> Expr ex -- e : A
+
     -- Extend the ast at this point
     Ext :: ex -> Expr ex
   deriving Show
@@ -31,6 +33,14 @@ data PCF =
   | Zero             -- zero
   deriving Show
 
+------------------------------
+-- Type syntax
+
+data Type =
+    FunTy Type Type  -- A -> B
+  | NatTy            -- Nat
+  deriving (Show, Eq)
+
 ----------------------------
 -- Bound and free variables (doesn't work over Ext terms yet)
 
@@ -38,12 +48,14 @@ bound_vars :: Expr ex -> Set.Set Identifier
 bound_vars (Abs var e) = var `Set.insert` bound_vars e
 bound_vars (App e1 e2) = bound_vars e1 `Set.union` bound_vars e2
 bound_vars (Var var)   = Set.singleton var
+bound_vars (Sig e _)   = bound_vars e
 bound_vars (Ext _)     = Set.empty
 
 free_vars :: Expr ex -> Set.Set Identifier
 free_vars (Abs var e) = Set.delete var (free_vars e)
 free_vars (App e1 e2) = free_vars e1 `Set.union` free_vars e2
 free_vars (Var var)   = Set.singleton var
+free_vars (Sig e _)   = free_vars e
 free_vars (Ext _)     = Set.empty
 
 ----------------------------
