@@ -22,10 +22,9 @@ See `simple.lam` and `test.lam`.
  - Session 4: Formally defining a type system via the simply-typed lambda 
     calculus
  - Session 5: Algorithmically defining a type system: type checking and 
-    type inference
- - Session 6: Recursion and strong normalisation theorems
- - Session 7: Extending our implementation with some more features
- - Session 8: The Curry-Howard correspondence (types vs. logic)
+    type inference [video (Kent only)](https://kent.cloud.panopto.eu/Panopto/Pages/Viewer.aspx?id=86ff0fcd-1702-4c92-8102-aaf600fa82a8)
+ - Session 6: PCF and PCF typing
+ - Session 7: The Curry-Howard correspondence in more detail (types vs. logic)
  - Session 9: Polymorphism (System F)
  - Session 10: Implementing polymorphic types (Hindley-Milner algorithm 
     and related).
