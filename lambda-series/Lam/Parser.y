@@ -1,5 +1,4 @@
 {
-{-# LANGUAGE ImplicitParams #-}
 {-# LANGUAGE FlexibleContexts #-}
 
 module Lam.Parser where
@@ -24,29 +23,17 @@ import Lam.Syntax
     nl    { TokenNL _ }
     let   { TokenLet _ }
     in    { TokenIn  _  }
-    if    { TokenIf _ }
-    then  { TokenThen _ }
-    else  { TokenElse _ }
-    INT   { TokenInt _ _ }
+    zero  { TokenZero _ }
+    succ  { TokenSucc _ }
     VAR    { TokenSym _ _ }
+    LANG   { TokenLang _ _ }
     CONSTR { TokenConstr _ _ }
-    CHAR   { TokenCharLiteral _ _ }
-    STRING { TokenStringLiteral _ _ }
     '\\'  { TokenLambda _ }
     '->'  { TokenArrow _ }
     '='   { TokenEq _ }
-    '=='  { TokenEquiv _ }
-    '/='  { TokenNeq _ }
-    '+'   { TokenAdd _ }
-    '-'   { TokenSub _ }
-    '*'   { TokenMul _ }
     '('   { TokenLParen _ }
     ')'   { TokenRParen _ }
     ':'   { TokenSig _ }
-    '<'   { TokenLesser _ }
-    '>'   { TokenGreater _ }
-    '<='  { TokenLesserEq _ }
-    '>='  { TokenGreaterEq _ }
     '?'   { TokenHole _ }
 
 %right in
@@ -56,68 +43,73 @@ import Lam.Syntax
 %left '*'
 %%
 
-Program :: { Expr (Arith ()) }
-  : Defs                                        { $1 }
+Program :: { (Expr PCF, [Option]) }
+  : Langs Defs  { ($2 $1, $1) }
 
-Defs :: { Expr (Arith ()) }
-  : Def NL Defs               { $1 $3 }
-  | Expr                      { $1 }
+Langs :: { [Option] }
+  : LANG nl Langs       { (readOption $1) : $3 }
+  | {- empty -}         { [] } 
+
+Defs :: { [Option] -> Expr PCF }
+  : Def NL Defs           { \opts -> ($1 opts) ($3 opts) }
+  | Expr                  { \opts -> $1 opts }
 
 NL :: { () }
   : nl NL                     { }
   | nl                        { }
 
-Def :: { Expr (Arith ()) -> Expr (Arith ()) }
-  : VAR '=' Expr { \program -> App (Abs (symString $1) program) $3 }
+Def :: { [Option] -> Expr PCF -> Expr PCF }
+  : VAR '=' Expr { \opts -> \program -> App (Abs (symString $1) program) ($3 opts) }
 
-Expr :: { Expr (Arith ()) }
+Expr :: { [Option] -> Expr PCF }
   : let VAR '=' Expr in Expr
-    { App (Abs (symString $2) $6) $4 }
+    { \opts -> App (Abs (symString $2) ($6 opts)) ($4 opts) }
 
   | '\\' VAR '->' Expr
-    { Abs (symString $2) $4 }
+    { \opts -> Abs (symString $2) ($4 opts) }
 
-  | if Expr then Expr else Expr
-    { Ext (Conditional $2 $4 $6) }
+  | succ '(' Expr ')'
+    { \opts -> 
+        if isPCF opts
+          then Ext (Succ ($3 opts))
+          else App (Var "succ") ($3 opts) }
 
-  | Form
+  | Juxt
     { $1 }
 
-Form :: { Expr (Arith ()) }
-  : Form '+' Form  { Ext (BinOp "+" $1 $3) }
-  | Form '-' Form  { Ext (BinOp "-" $1 $3) }
-  | Form '*' Form  { Ext (BinOp "*" $1 $3) }
-  | Form '<' Form  { Ext (BinOp "<" $1 $3) }
-  | Form '>' Form  { Ext (BinOp ">" $1 $3) }
-  | Form '<=' Form { Ext (BinOp "<=" $1 $3) }
-  | Form '>=' Form { Ext (BinOp ">=" $1 $3) }
-  | Form '==' Form { Ext (BinOp "==" $1 $3) }
-  | Form '/=' Form { Ext (BinOp "/=" $1 $3) }
-  | Juxt           { $1 }
-
-Juxt :: { Expr (Arith ()) }
-  : Juxt Atom                 { App $1 $2 }
+Juxt :: { [Option] -> Expr PCF }
+  : Juxt Atom                 { \opts -> App ($1 opts) ($2 opts) }
   | Atom                      { $1 }
 
-Atom :: { Expr (Arith ()) }
+Atom :: { [Option] -> Expr PCF }
   : '(' Expr ')'              { $2 }
-  | INT                       { let (TokenInt _ x) = $1
-                                 in  Ext (Constant x) }
-  | VAR                       { Var (symString $1) }
+  | VAR                       { \_ -> Var (symString $1) }
+  | zero                     
+     {\opts ->
+          if isPCF opts
+            then Ext Zero
+            else Var "zero" }
 
   -- For later
   -- | '?' { Hole }
 
 {
 
+readOption :: Token -> Option
+readOption (TokenLang _ x) | x == "lang.pcf"   = PCF
+readOption (TokenLang _ x) | x == "lang.typed" = Typed
+readOption (TokenLang _ x) = error $ "Unknown language option: " <> x
+readOption _ = error "Wrong token for language"
+
 parseError :: [Token] -> ReaderT String (Either String) a
 parseError [] = lift $ Left "Premature end of file"
 parseError t  =  do
     file <- ask
-    lift . Left $ file <> ":" <> show l <> ":" <> show c <> ": parse error"
+    lift . Left $ file <> ":" <> show l <> ":" <> show c
+                        <> ": parse error"
   where (l, c) = getPos (head t)
 
-parseProgram :: FilePath -> String -> Either String (Expr (Arith ()))
+parseProgram :: FilePath -> String -> Either String (Expr PCF, [Option])
 parseProgram file input = runReaderT (program $ scanTokens input) file
 
 failWithMsg :: String -> IO a

@@ -15,18 +15,20 @@ data Expr ex where
     App :: Expr ex ->  Expr ex   -> Expr ex -- e1 e2
     Var :: Identifier            -> Expr ex -- x
 
-  -- Extend the ast at this point
+    -- Extend the ast at this point
     Ext :: ex -> Expr ex
   deriving Show
 
 ----------------------------
--- Extend the language with arithmetic and conditional expressions
--- (For later)
+-- Extend the language to PCF (natural number constructors
+-- and deconstructor + fixed point)
 
-data Arith ex =
-    BinOp String (Expr (Arith ex)) (Expr (Arith ex))
-  | Conditional (Expr (Arith ex)) (Expr (Arith ex)) (Expr (Arith ex))
-  | Constant Int
+data PCF =
+    Case (Expr PCF) (Expr PCF) (Identifier, Expr PCF)
+                     -- case e of zero -> e1; succ x -> e2
+  | Fix (Expr PCF)   -- fix(e)
+  | Succ (Expr PCF)  -- succ(e)
+  | Zero             -- zero
   deriving Show
 
 ----------------------------
@@ -51,3 +53,20 @@ free_vars (Ext _)     = Set.empty
 fresh_var :: Identifier -> Set.Set Identifier -> Identifier
 fresh_var var vars =
   if var `Set.member` vars then fresh_var (var ++ "'") vars else var
+
+------------------------------
+-- Language options that `lcore` accepts in files
+
+data Option = PCF | Typed
+  deriving Eq
+
+-- Some helpers
+
+isPCF :: [Option] -> Bool
+isPCF options = elem PCF options
+
+isTyped :: [Option] -> Bool
+isTyped options = elem Typed options
+
+language :: [Option] -> String
+language options = if isPCF options then "PCF" else "lambda"

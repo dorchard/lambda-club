@@ -2,7 +2,7 @@
 -- fact n = if (n == 0) then 1 else n * fact (n - 1)
 
 -- Some numbers
-zero  = \f -> \x -> x
+zeroo  = \f -> \x -> x
 one   = \f -> \x -> f x
 two   = \f -> \x -> f (f x)
 three = \f -> \x -> f (f (f x))

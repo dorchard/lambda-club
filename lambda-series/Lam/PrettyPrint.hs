@@ -1,3 +1,6 @@
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 module Lam.PrettyPrint where
 
 import Lam.Syntax
@@ -25,13 +28,12 @@ instance PrettyPrint ex => PrettyPrint (Expr ex) where
     pprint (Var var) = var
     pprint (Ext e) = pprint e
 
-instance PrettyPrint ex => PrettyPrint (Arith ex) where
-    isLexicallyAtomic (Constant _) = True
-    isLexicallyAtomic _         = False
+instance PrettyPrint PCF where
+    isLexicallyAtomic _         = True
 
-    pprint (BinOp op e1 e2) = pprint e1 ++ " " ++ op ++ " " ++ pprint e2
-    pprint (Conditional e1 e2 e3) = "if " ++ pprint e1 ++ " then " ++ pprint e2 ++ " else " ++ pprint e3
-    pprint (Constant n) = show n
+    pprint Zero     = "zero"
+    pprint (Succ e) = "succ(" ++ pprint e ++ ")"
+    pprint _        = error "Not implemented yet"
 
 instance PrettyPrint () where
     pprint () = "()"

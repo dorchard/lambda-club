@@ -27,6 +27,8 @@ $alphanum  = [$alpha $digit \_]
 @charLiteral = \' ([\\.]|[^\']| . ) \'
 @stringLiteral = \"(\\.|[^\"]|\n)*\"
 
+@langPrag = [a-z]+
+
 tokens :-
 
   $white*$eol                   { \p s -> TokenNL p }
@@ -34,66 +36,44 @@ tokens :-
   $white+                       ;
   "--".*                        ;
   @constr                       { \p s -> TokenConstr p s }
+  lang.@langPrag                { \p s -> TokenLang p s }
   let                           { \p s -> TokenLet p }
   in                            { \p s -> TokenIn p }
-  if                            { \p s -> TokenIf p }
-  then                          { \p s -> TokenThen p }
-  else                          { \p s -> TokenElse p }
-  @int                          { \p s -> TokenInt p $ read s }
-  @charLiteral                  { \p s -> TokenCharLiteral p $ read s }
-  @stringLiteral                { \p s -> TokenStringLiteral p $ read s }
+  zero                          { \p s -> TokenZero p }
+  succ                          { \p s -> TokenSucc p }
   @sym				                  { \p s -> TokenSym p s }
   "->"                          { \p s -> TokenArrow p }
   \\                            { \p s -> TokenLambda p }
   \=                            { \p s -> TokenEq p }
-  "/="                          { \p s -> TokenNeq p }
-  [\+]                          { \p s -> TokenAdd p }
-  [\-]                          { \p s -> TokenSub p }
-  [\*]                          { \p s -> TokenMul p }
   \(                            { \p s -> TokenLParen p }
   \)                            { \p s -> TokenRParen p }
   \:                            { \p s -> TokenSig p }
-  "<"                          { \p s -> TokenLesser p }
-  ">"                          { \p s -> TokenGreater p }
-  "<="                          { \p s -> TokenLesserEq p }
-  ">="                          { \p s -> TokenGreaterEq p }
-  "=="                          { \p s -> TokenEquiv p }
   "?"                           { \p _ -> TokenHole p }
 
 {
 
 data Token
-  = TokenLet    AlexPosn
+  = TokenLang   AlexPosn String
+  | TokenLet    AlexPosn
   | TokenIn     AlexPosn
-  | TokenIf     AlexPosn
-  | TokenThen   AlexPosn
-  | TokenElse   AlexPosn
   | TokenLambda AlexPosn
-  | TokenInt    AlexPosn Int
   | TokenSym    AlexPosn String
+  | TokenZero   AlexPosn
+  | TokenSucc   AlexPosn
   | TokenArrow  AlexPosn
   | TokenEq     AlexPosn
-  | TokenNeq     AlexPosn
-  | TokenAdd    AlexPosn
-  | TokenSub    AlexPosn
-  | TokenMul    AlexPosn
-  | TokenCharLiteral AlexPosn Char
-  | TokenStringLiteral AlexPosn Text
   | TokenLParen AlexPosn
   | TokenRParen AlexPosn
   | TokenNL     AlexPosn
   | TokenConstr AlexPosn String
   | TokenSig    AlexPosn
-  | TokenLesser AlexPosn
-  | TokenGreater AlexPosn
-  | TokenLesserEq AlexPosn
-  | TokenGreaterEq AlexPosn
   | TokenEquiv AlexPosn
   | TokenHole AlexPosn
   deriving (Eq, Show, Generic)
 
 symString :: Token -> String
 symString (TokenSym _ x) = x
+symString _ = error "Not a symbol"
 
 constrString :: Token -> String
 constrString (TokenConstr _ x) = x

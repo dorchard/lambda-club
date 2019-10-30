@@ -23,7 +23,7 @@ main = do
           -- Read the file, parse, and do something...
           input <- readFile fname
           case parseProgram fname input of
-            Right ast -> do
+            Right (ast, options) -> do
               -- Show AST
               putStrLn $ "\n AST: " <> show ast
               -- Pretty print
