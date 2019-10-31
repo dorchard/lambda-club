@@ -79,10 +79,9 @@ synth gamma (Ext Zero) =
   Just NatTy
 
 -- app (special for form of top-level definitions)
-synth gamma (App (Abs x (Sig e1 tyB)) (Sig e2 tyA)) =
-   if check ([(x, tyA)] ++ gamma) e1 tyB
-    then Just tyB
-    else Nothing
+synth gamma (App (Abs x e1) (Sig e2 tyA)) =
+   synth ([(x, tyA)] ++ gamma) e1
+
 
 -- app
 synth gamma (App e1 e2) =
@@ -101,13 +100,12 @@ synth gamma (App e1 e2) =
     Nothing ->
       error $ "Expecting (" ++ pprint e1 ++ ") to have function type."
 
-
 -- checkSynth
-
 synth gamma (Sig e ty) =
   if check gamma e ty
     then Just ty
     else error $ "Trying to check (" ++ pprint e ++ ") against " ++ pprint ty
+
 
 -- catch all (cannot synth here)
 synth gamma e =
