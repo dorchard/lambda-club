@@ -23,7 +23,6 @@ import Lam.Syntax
     nl    { TokenNL _ }
     let   { TokenLet _ }
     in    { TokenIn  _  }
-    zero  { TokenZero _ }
     succ  { TokenSucc _ }
     VAR    { TokenSym _ _ }
     LANG   { TokenLang _ _ }
@@ -48,7 +47,7 @@ Program :: { (Expr PCF, [Option]) }
 
 LangOpts :: { [Option] }
   : LANG nl LangOpts    { (readOption $1) : $3 }
-  | {- empty -}         { [] } 
+  | {- empty -}         { [] }
 
 Defs :: { [Option] -> Expr PCF }
   : Def NL Defs           { \opts -> ($1 opts) ($3 opts) }
@@ -91,12 +90,11 @@ Juxt :: { [Option] -> Expr PCF }
 
 Atom :: { [Option] -> Expr PCF }
   : '(' Expr ')'              { $2 }
-  | VAR                       { \_ -> Var (symString $1) }
-  | zero
-     {\opts ->
-          if isPCF opts
-            then Ext Zero
-            else Var "zero" }
+  | VAR
+     { \opts ->
+         if symString $1 == "zero" && isPCF opts
+          then Ext Zero
+          else Var $ symString $1 }
 
   -- For later
   -- | '?' { Hole }

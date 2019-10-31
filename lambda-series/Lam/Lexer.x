@@ -39,7 +39,6 @@ tokens :-
   lang.@langPrag                { \p s -> TokenLang p s }
   let                           { \p s -> TokenLet p }
   in                            { \p s -> TokenIn p }
-  zero                          { \p s -> TokenZero p }
   succ                          { \p s -> TokenSucc p }
   @sym				                  { \p s -> TokenSym p s }
   "->"                          { \p s -> TokenArrow p }
@@ -58,7 +57,6 @@ data Token
   | TokenIn     AlexPosn
   | TokenLambda AlexPosn
   | TokenSym    AlexPosn String
-  | TokenZero   AlexPosn
   | TokenSucc   AlexPosn
   | TokenArrow  AlexPosn
   | TokenEq     AlexPosn
