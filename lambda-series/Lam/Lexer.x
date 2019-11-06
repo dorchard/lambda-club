@@ -41,6 +41,10 @@ tokens :-
   in                            { \p s -> TokenIn p }
   succ                          { \p s -> TokenSucc p }
   zero                          { \p s -> TokenZero p }
+  case                          { \p s -> TokenCase p }
+  of                            { \p s -> TokenOf p }
+  fix                           { \p s -> TokenFix p }
+  "|"                           { \p s -> TokenSep p }
   @sym				                  { \p s -> TokenSym p s }
   "->"                          { \p s -> TokenArrow p }
   \\                            { \p s -> TokenLambda p }
@@ -54,6 +58,10 @@ tokens :-
 
 data Token
   = TokenLang   AlexPosn String
+  | TokenCase   AlexPosn
+  | TokenOf     AlexPosn
+  | TokenSep    AlexPosn
+  | TokenFix    AlexPosn
   | TokenLet    AlexPosn
   | TokenIn     AlexPosn
   | TokenLambda AlexPosn

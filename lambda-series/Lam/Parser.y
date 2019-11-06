@@ -22,6 +22,10 @@ import Lam.Syntax
 %token
     nl    { TokenNL _ }
     let   { TokenLet _ }
+    case  { TokenCase _ }
+    of    { TokenOf _ }
+    '|'   { TokenSep _ }
+    fix   { TokenFix _ }
     in    { TokenIn  _  }
     zero  { TokenZero _ }
     succ  { TokenSucc _ }
@@ -80,6 +84,18 @@ Expr :: { [Option] -> Expr PCF }
 
   | Juxt
     { $1 }
+
+  | fix '(' Expr ')'
+     { \opts ->
+      if isPCF opts
+        then Ext (Fix ($3 opts))
+        else error "`fix` doesn't exists in the lambda calculus" }
+
+  | case Expr of zero '->' Expr '|' succ VAR '->' Expr
+     { \opts ->
+          if isPCF opts
+            then Ext (Case ($2 opts) ($6 opts) (symString $9, ($11 opts)))
+            else error "`case` doesn't exist in the lambda calculus" }
 
 Type :: { Type }
 Type

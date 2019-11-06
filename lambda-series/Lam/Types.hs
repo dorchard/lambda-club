@@ -87,6 +87,9 @@ synth gamma (Var x) =
 synth gamma (Ext Zero) =
   Just NatTy
 
+synth gamma (Ext Succ) =
+  Just (FunTy NatTy NatTy)
+
 {-
 
 The following is a special form of (app) which
