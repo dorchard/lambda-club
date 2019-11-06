@@ -6,7 +6,7 @@ three = \f -> \x -> f (f (f x))
 four  = \f -> \x -> f (f (f (f x)))
 
 -- Algebraic operations on Church numerals
-succ = \ n -> \ s -> \ z -> s (n s z)
+succ = \n -> \s -> \z -> s (n s z)
 plus = \n -> \m -> (\f -> \x -> n f (m f x))
 mult = \n -> \m -> (\f -> \x -> n (m f) x)
 
@@ -40,8 +40,8 @@ mult = \n -> \m -> (\f -> \x -> n (m f) x)
 -- note that succf f (const f x) = \h -> h ((const f x) f), and wrap x = \ f -> f x
 --    therefore const f x = \any -> x i.e. const = \f -> \x -> \any -> x
 -- we can see that
-    n (succf f) (constf f x) =
-        if n = 0 then (constf f x = \any -> x) else value ((n-1) f x)
+--    n (succf f) (constf f x) =
+--        if n = 0 then (constf f x = \any -> x) else value ((n-1) f x)
 -- so we have our way of applying f one less time!
 
 -- therefore:

@@ -29,7 +29,7 @@ data PCF =
     Case (Expr PCF) (Expr PCF) (Identifier, Expr PCF)
                      -- case e of zero -> e1; succ x -> e2
   | Fix (Expr PCF)   -- fix(e)
-  | Succ (Expr PCF)  -- succ(e)
+  | Succ             -- succ (function)
   | Zero             -- zero
   deriving Show
 

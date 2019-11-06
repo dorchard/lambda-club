@@ -23,6 +23,7 @@ import Lam.Syntax
     nl    { TokenNL _ }
     let   { TokenLet _ }
     in    { TokenIn  _  }
+    zero  { TokenZero _ }
     succ  { TokenSucc _ }
     VAR    { TokenSym _ _ }
     LANG   { TokenLang _ _ }
@@ -59,6 +60,14 @@ NL :: { () }
 
 Def :: { [Option] -> Expr PCF -> Expr PCF }
   : VAR '=' Expr { \opts -> \program -> App (Abs (symString $1) program) ($3 opts) }
+  | zero '=' Expr { \opts ->
+        if isPCF opts
+          then error "Cannot use 'zero' as a variable name"
+          else  \program -> App (Abs "zero" program) ($3 opts) }
+  | succ '=' Expr { \opts ->
+        if isPCF opts
+          then error "Cannot use 'succ' as a variable name"
+          else  \program -> App (Abs "succ" program) ($3 opts) }
 
 Expr :: { [Option] -> Expr PCF }
   : let VAR '=' Expr in Expr
@@ -66,12 +75,6 @@ Expr :: { [Option] -> Expr PCF }
 
   | '\\' VAR '->' Expr
     { \opts -> Abs (symString $2) ($4 opts) }
-
-  | succ '(' Expr ')'
-    { \opts ->
-        if isPCF opts
-          then Ext (Succ ($3 opts))
-          else App (Var "succ") ($3 opts) }
 
   | Expr ':' Type  { \opts -> Sig ($1 opts) $3 }
 
@@ -90,11 +93,17 @@ Juxt :: { [Option] -> Expr PCF }
 
 Atom :: { [Option] -> Expr PCF }
   : '(' Expr ')'              { $2 }
-  | VAR
-     { \opts ->
-         if symString $1 == "zero" && isPCF opts
+  | VAR                       { \opts -> Var $ symString $1 }
+  | zero
+    { \opts ->
+        if isPCF opts
           then Ext Zero
-          else Var $ symString $1 }
+          else Var "zero" }
+  | succ
+    { \opts ->
+        if isPCF opts
+          then Ext Succ
+          else Var "succ" }
 
   -- For later
   -- | '?' { Hole }

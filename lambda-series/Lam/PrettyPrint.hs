@@ -37,7 +37,7 @@ instance PrettyPrint PCF where
     isLexicallyAtomic _       = False
 
     pprint Zero     = "zero"
-    pprint (Succ e) = "succ(" ++ pprint e ++ ")"
+    pprint Succ     = "succ"
     pprint _        = error "Not implemented yet"
 
 instance PrettyPrint () where

@@ -40,6 +40,7 @@ tokens :-
   let                           { \p s -> TokenLet p }
   in                            { \p s -> TokenIn p }
   succ                          { \p s -> TokenSucc p }
+  zero                          { \p s -> TokenZero p }
   @sym				                  { \p s -> TokenSym p s }
   "->"                          { \p s -> TokenArrow p }
   \\                            { \p s -> TokenLambda p }
@@ -57,6 +58,7 @@ data Token
   | TokenIn     AlexPosn
   | TokenLambda AlexPosn
   | TokenSym    AlexPosn String
+  | TokenZero   AlexPosn
   | TokenSucc   AlexPosn
   | TokenArrow  AlexPosn
   | TokenEq     AlexPosn
