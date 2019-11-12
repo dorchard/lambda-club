@@ -36,9 +36,12 @@ instance PrettyPrint PCF where
     isLexicallyAtomic Zero    = True
     isLexicallyAtomic _       = False
 
-    pprint Zero     = "zero"
-    pprint Succ     = "succ"
-    pprint _        = error "Not implemented yet"
+    pprint Zero                = "zero"
+    pprint Succ                = "succ"
+    pprint (Fix e)             = "fix " ++ bracket_pprint e
+    pprint (Case e e1 (x, e2)) =
+      "case " ++ bracket_pprint e ++ " of zero => " ++
+      bracket_pprint e1 ++ " | succ " ++ x ++ " => " ++ bracket_pprint e2
 
 instance PrettyPrint () where
     pprint () = "()"

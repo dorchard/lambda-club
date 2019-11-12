@@ -50,6 +50,20 @@ G |- (\x -> e) <= A -> B
 check gamma (Abs x expr) (FunTy tyA tyB) =
   check ([(x, tyA)] ++ gamma) expr tyB
 
+--- PCF rules
+check gamma (Ext Succ) (FunTy NatTy NatTy) = True
+check gamma (Ext Succ) _                   = False
+
+check gamma (Ext Zero) NatTy = True
+check gamma (Ext Zero) _     = False
+
+check gamma (Ext (Fix e)) t = check gamma e (FunTy t t)
+
+check gamma (Ext (Case e e1 (x,e2))) t =
+  check gamma e NatTy &&
+  check gamma e1 t &&
+  check ([(x,NatTy)] ++ gamma) e2 t
+
 {--
 
 G |- e => A'   A' == A
@@ -83,13 +97,6 @@ G |- x => A
 synth gamma (Var x) =
   lookup x gamma
 
--- zero (we will add more rules for PCF soon)
-synth gamma (Ext Zero) =
-  Just NatTy
-
-synth gamma (Ext Succ) =
-  Just (FunTy NatTy NatTy)
-
 {-
 
 The following is a special form of (app) which
@@ -110,7 +117,9 @@ i.e., we know we have a signature for the argument.
 
 -- app (special for form of top-level definitions)
 synth gamma (App (Abs x e1) (Sig e2 tyA)) =
-   synth ([(x, tyA)] ++ gamma) e1
+  if check gamma e2 tyA
+    then synth ([(x, tyA)] ++ gamma) e1
+    else error $ "Expecting (" ++ pprint e2 ++ ") to have type " ++ pprint tyA
 
 {-
 
@@ -136,6 +145,36 @@ synth gamma (App e1 e2) =
     Nothing ->
       error $ "Expecting (" ++ pprint e1 ++ ") to have function type."
 
+-- PCF rules
+synth gamma (Ext Zero) =
+  Just NatTy
+
+synth gamma (Ext Succ) =
+  Just (FunTy NatTy NatTy)
+
+synth gamma (Ext (Case e e1 (x,e2))) =
+  if check gamma e NatTy then
+    case synth gamma e1 of
+      Just t ->
+        if check ([(x,NatTy)] ++ gamma) e2 t
+          then Just t
+          else error $ "Expecting (" ++ pprint e2 ++ ") to have type " ++ pprint t
+      Nothing ->
+        (case synth ([(x,NatTy)] ++ gamma) e2 of
+          Just t ->
+            if check gamma e1 t
+              then Just t
+              else error $ "Expecting (" ++ pprint e1 ++ ") to have type " ++ pprint t
+          Nothing -> error $ "Could not synth types for " ++ pprint e1 ++ ", " ++ pprint e2)
+  else error $ "Expecting (" ++ pprint e ++ ") to have type " ++ pprint NatTy
+
+synth gamma (Ext (Fix e)) =
+  case synth gamma e of
+    Just (FunTy t1 t2) ->
+      if t1 == t2 then Just t1
+      else error $ "Expecting (" ++ pprint e ++ ") to have function type with equal domain/range but got " ++ pprint (FunTy t1 t2)
+    Just t -> error $ "Expecting (" ++ pprint e ++ ") to have function type with equal domain/range but got " ++ pprint t
+    Nothing -> error $ "Expecting (" ++ pprint e ++ ") to have function type with equal domain/range"
 
 {-
 
