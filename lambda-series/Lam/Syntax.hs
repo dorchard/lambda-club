@@ -44,19 +44,23 @@ data Type =
 ----------------------------
 -- Bound and free variables (doesn't work over Ext terms yet)
 
-bound_vars :: Expr ex -> Set.Set Identifier
-bound_vars (Abs var e) = var `Set.insert` bound_vars e
-bound_vars (App e1 e2) = bound_vars e1 `Set.union` bound_vars e2
-bound_vars (Var var)   = Set.singleton var
-bound_vars (Sig e _)   = bound_vars e
-bound_vars (Ext _)     = Set.empty
+bound_vars :: Expr PCF -> Set.Set Identifier
+bound_vars (Abs var e)              = var `Set.insert` bound_vars e
+bound_vars (App e1 e2)              = bound_vars e1 `Set.union` bound_vars e2
+bound_vars (Var var)                = Set.singleton var
+bound_vars (Sig e _)                = bound_vars e
+bound_vars (Ext (Case e e1 (x,e2))) = x `Set.insert` (bound_vars e `Set.union` bound_vars e1 `Set.union` bound_vars e2)
+bound_vars (Ext (Fix e))            = bound_vars e
+bound_vars (Ext _)                  = Set.empty
 
-free_vars :: Expr ex -> Set.Set Identifier
-free_vars (Abs var e) = Set.delete var (free_vars e)
-free_vars (App e1 e2) = free_vars e1 `Set.union` free_vars e2
-free_vars (Var var)   = Set.singleton var
-free_vars (Sig e _)   = free_vars e
-free_vars (Ext _)     = Set.empty
+free_vars :: Expr PCF -> Set.Set Identifier
+free_vars (Abs var e)               = Set.delete var (free_vars e)
+free_vars (App e1 e2)               = free_vars e1 `Set.union` free_vars e2
+free_vars (Var var)                 = Set.singleton var
+free_vars (Sig e _)                 = free_vars e
+free_vars (Ext (Case e e1 (x,e2)))  = free_vars e `Set.union` free_vars e1 `Set.union` (Set.delete x (free_vars e2))
+free_vars (Ext (Fix e))             = free_vars e
+free_vars (Ext _)                   = Set.empty
 
 ----------------------------
 -- Fresh variable with respect to a set of variables
