@@ -51,12 +51,6 @@ check gamma (Abs x expr) (FunTy tyA tyB) =
   check ([(x, tyA)] ++ gamma) expr tyB
 
 --- PCF rules
-check gamma (Ext Succ) (FunTy NatTy NatTy) = True
-check gamma (Ext Succ) _                   = False
-
-check gamma (Ext Zero) NatTy = True
-check gamma (Ext Zero) _     = False
-
 check gamma (Ext (Fix e)) t = check gamma e (FunTy t t)
 
 check gamma (Ext (Case e e1 (x,e2))) t =
