@@ -58,6 +58,23 @@ check gamma (Ext (Case e e1 (x,e2))) t =
   check gamma e1 t &&
   check ([(x,NatTy)] ++ gamma) e2 t
 
+check gamma (Ext (Pair e1 e2)) (ProdTy t1 t2) =
+  check gamma e1 t1 &&
+  check gamma e2 t2
+
+check gamma (Ext (Pair _ _)) _ = False
+
+check gamma (Ext (Fst e)) t =
+  case synth gamma e of
+    Just (ProdTy t1 t2) -> t == t1
+    _ -> False
+
+check gamma (Ext (Snd e)) t =
+  case synth gamma e of
+    Just (ProdTy t1 t2) -> t == t2
+    _ -> False
+
+
 {--
 
 G |- e => A'   A' == A
@@ -169,6 +186,27 @@ synth gamma (Ext (Fix e)) =
       else error $ "Expecting (" ++ pprint e ++ ") to have function type with equal domain/range but got " ++ pprint (FunTy t1 t2)
     Just t -> error $ "Expecting (" ++ pprint e ++ ") to have function type with equal domain/range but got " ++ pprint t
     Nothing -> error $ "Expecting (" ++ pprint e ++ ") to have function type with equal domain/range"
+
+synth gamma (Ext (Pair e1 e2)) =
+  case synth gamma e1 of
+    Just t1 ->
+      case synth gamma e2 of
+        Just t2 -> Just (ProdTy t1 t2)
+        Nothing -> error $ "Could not synth type for " ++ pprint e2
+    Nothing -> error $ "Could not synth type for " ++ pprint e1
+
+synth gamma (Ext (Fst e)) =
+  case synth gamma e of
+    Just (ProdTy t1 t2) -> Just t1
+    Just t -> error $ "Expecting (" ++ pprint e ++ ") to have product type but got " ++ pprint t
+    Nothing -> error $ "Could not synth type for " ++ pprint e
+
+synth gamma (Ext (Snd e)) =
+  case synth gamma e of
+    Just (ProdTy t1 t2) -> Just t2
+    Just t -> error $ "Expecting (" ++ pprint e ++ ") to have product type but got " ++ pprint t
+    Nothing -> error $ "Could not synth type for " ++ pprint e
+
 
 {-
 

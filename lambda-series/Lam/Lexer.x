@@ -44,6 +44,8 @@ tokens :-
   case                          { \p s -> TokenCase p }
   of                            { \p s -> TokenOf p }
   fix                           { \p s -> TokenFix p }
+  fst                           { \p s -> TokenFst p }
+  snd                           { \p s -> TokenSnd p }
   "|"                           { \p s -> TokenSep p }
   @sym				                  { \p s -> TokenSym p s }
   "->"                          { \p s -> TokenArrow p }
@@ -53,6 +55,10 @@ tokens :-
   \)                            { \p s -> TokenRParen p }
   \:                            { \p s -> TokenSig p }
   "?"                           { \p _ -> TokenHole p }
+  "*"                           { \p s -> TokenProd p }
+  "<"                           { \p s -> TokenLPair p }
+  ">"                           { \p s -> TokenRPair p }
+  ", "                          { \p s -> TokenMPair p }
 
 {
 
@@ -75,8 +81,14 @@ data Token
   | TokenNL     AlexPosn
   | TokenConstr AlexPosn String
   | TokenSig    AlexPosn
-  | TokenEquiv AlexPosn
-  | TokenHole AlexPosn
+  | TokenEquiv  AlexPosn
+  | TokenHole   AlexPosn
+  | TokenProd   AlexPosn
+  | TokenLPair  AlexPosn
+  | TokenRPair  AlexPosn
+  | TokenMPair  AlexPosn
+  | TokenFst    AlexPosn
+  | TokenSnd    AlexPosn
   deriving (Eq, Show, Generic)
 
 symString :: Token -> String

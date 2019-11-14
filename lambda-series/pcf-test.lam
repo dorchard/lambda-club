@@ -6,7 +6,6 @@ ntimes = (fix(\ ntimes' -> \ n -> \ f -> \ x -> case n of zero -> x | succ n' ->
 plus = (\ n -> \ m -> ntimes m succ n) : Nat -> Nat -> Nat
 times = (\ n -> \ m -> ntimes m (\ x -> plus n x) zero) : Nat -> Nat -> Nat
 
-fact_step = (\ fact' -> \ n -> (case n of zero -> succ zero | succ n' ->  times n (fact' n'))) : (Nat -> Nat) -> Nat -> Nat
-fact = (fix(fact_step)) : Nat -> Nat
+fact = fix(\ fact' -> \ n -> (case n of zero -> succ zero | succ n' ->  times n (fact' n'))) : Nat -> Nat
 
 fact (succ (succ (succ (zero))))

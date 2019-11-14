@@ -42,6 +42,9 @@ instance PrettyPrint PCF where
     pprint (Case e e1 (x, e2)) =
       "case " ++ bracket_pprint e ++ " of zero => " ++
       bracket_pprint e1 ++ " | succ " ++ x ++ " => " ++ bracket_pprint e2
+    pprint (Pair e1 e2)        = "<" ++ pprint e1 ++ ", " ++ pprint e2 ++ ">"
+    pprint (Fst e)             = "fst " ++ bracket_pprint e
+    pprint (Snd e)             = "snd " ++ bracket_pprint e
 
 instance PrettyPrint () where
     pprint () = "()"
@@ -52,4 +55,6 @@ instance PrettyPrint Type where
 
     pprint NatTy = "Nat"
     pprint (FunTy tyA tyB) =
-        bracket_pprint tyA ++ " -> " ++ pprint tyB
+      bracket_pprint tyA ++ " -> " ++ pprint tyB
+    pprint (ProdTy tyA tyB) =
+      bracket_pprint tyA ++ " * " ++ bracket_pprint tyB

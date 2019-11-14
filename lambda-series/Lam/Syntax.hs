@@ -27,10 +27,13 @@ data Expr ex where
 
 data PCF =
     Case (Expr PCF) (Expr PCF) (Identifier, Expr PCF)
-                     -- case e of zero -> e1 | succ x -> e2
-  | Fix (Expr PCF)   -- fix(e)
-  | Succ             -- succ (function)
-  | Zero             -- zero
+                               -- case e of zero -> e1 | succ x -> e2
+  | Fix (Expr PCF)             -- fix(e)
+  | Succ                       -- succ (function)
+  | Zero                       -- zero
+  | Pair (Expr PCF) (Expr PCF) -- <e1, e2>
+  | Fst (Expr PCF)             -- fst e
+  | Snd (Expr PCF)             -- snd e
   deriving Show
 
 ------------------------------
@@ -39,6 +42,7 @@ data PCF =
 data Type =
     FunTy Type Type  -- A -> B
   | NatTy            -- Nat
+  | ProdTy Type Type -- A -x- B
   deriving (Show, Eq)
 
 ----------------------------
@@ -51,6 +55,9 @@ bound_vars (Var var)                = Set.singleton var
 bound_vars (Sig e _)                = bound_vars e
 bound_vars (Ext (Case e e1 (x,e2))) = x `Set.insert` (bound_vars e `Set.union` bound_vars e1 `Set.union` bound_vars e2)
 bound_vars (Ext (Fix e))            = bound_vars e
+bound_vars (Ext (Pair e1 e2))       = bound_vars e1 `Set.union` bound_vars e2
+bound_vars (Ext (Fst e))            = bound_vars e
+bound_vars (Ext (Snd e))            = bound_vars e
 bound_vars (Ext _)                  = Set.empty
 
 free_vars :: Expr PCF -> Set.Set Identifier
@@ -60,6 +67,9 @@ free_vars (Var var)                 = Set.singleton var
 free_vars (Sig e _)                 = free_vars e
 free_vars (Ext (Case e e1 (x,e2)))  = free_vars e `Set.union` free_vars e1 `Set.union` (Set.delete x (free_vars e2))
 free_vars (Ext (Fix e))             = free_vars e
+free_vars (Ext (Pair e1 e2))        = free_vars e1 `Set.union` free_vars e2
+free_vars (Ext (Fst e))             = free_vars e
+free_vars (Ext (Snd e))             = free_vars e
 free_vars (Ext _)                   = Set.empty
 
 ----------------------------

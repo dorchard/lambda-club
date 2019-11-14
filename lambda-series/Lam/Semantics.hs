@@ -43,6 +43,29 @@ smallStep (Ext (Case e e1 (x,e2))) =
     Just e' -> Just (Ext (Case e' e1 (x,e2)))
     Nothing -> Nothing
 
+smallStep (Ext (Pair e1 e2)) =
+  case smallStep e1 of
+    Just e1' -> Just $ Ext $ Pair e1' e2
+    Nothing -> (
+      case smallStep e2 of
+        Just e2' -> Just $ Ext $ Pair e1 e2'
+        Nothing -> Nothing
+      )
+
+smallStep (Ext (Fst (Ext (Pair e1 e2)))) = Just e1
+smallStep (Ext (Snd (Ext (Pair e1 e2)))) = Just e2
+
+smallStep (Ext (Fst e)) =
+  case smallStep e of
+    Just e' -> Just $ Ext $ Fst e'
+    Nothing -> Nothing
+
+smallStep (Ext (Snd e)) =
+  case smallStep e of
+    Just e' -> Just $ Ext $ Snd e'
+    Nothing -> Nothing
+
+
 -- other Ext terms
 smallStep (Ext _) = Nothing
 
@@ -85,6 +108,12 @@ substitute (Ext (Case e1 e2 (y,e3))) (x,e) =
     let y' = fresh_var y (free_vars e `Set.union` free_vars e3)
     in Ext $ Case e1' e2' (y', substitute (substitute e3 (y, Var y')) (x,e))
   else Ext $ Case e1' e2' (y, substitute e3 (x,e))
+
+substitute (Ext (Pair e1 e2)) s =
+  Ext $ Pair (substitute e1 s) (substitute e2 s)
+
+substitute (Ext (Fst e)) s = Ext $ Fst $ substitute e s
+substitute (Ext (Snd e)) s = Ext $ Snd $ substitute e s
 
 -- Keep doing small step reductions until normal form reached
 multiStep :: Expr PCF -> (Expr PCF, Int)
