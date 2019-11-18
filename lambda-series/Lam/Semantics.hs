@@ -34,13 +34,13 @@ smallStep (Ext (Fix e)) =
     Just e' -> Just (Ext $ Fix e')
     Nothing -> Just $ App e (Ext $ Fix e)
 
-smallStep (Ext (Case (Ext Zero) e1 _)) = Just e1
+smallStep (Ext (NatCase (Ext Zero) e1 _)) = Just e1
 
-smallStep (Ext (Case (App (Ext Succ) n) _ (x,e2))) = Just $ substitute e2 (x,n)
+smallStep (Ext (NatCase (App (Ext Succ) n) _ (x,e2))) = Just $ substitute e2 (x,n)
 
-smallStep (Ext (Case e e1 (x,e2))) =
+smallStep (Ext (NatCase e e1 (x,e2))) =
   case smallStep e of
-    Just e' -> Just (Ext (Case e' e1 (x,e2)))
+    Just e' -> Just (Ext (NatCase e' e1 (x,e2)))
     Nothing -> Nothing
 
 smallStep (Ext (Pair e1 e2)) =
@@ -65,6 +65,23 @@ smallStep (Ext (Snd e)) =
     Just e' -> Just $ Ext $ Snd e'
     Nothing -> Nothing
 
+smallStep (Ext (Case (Ext (Inl e)) (x,e1) _)) = Just $ substitute e1 (x,e)
+smallStep (Ext (Case (Ext (Inr e)) _ (y,e2))) = Just $ substitute e2 (y,e)
+
+smallStep (Ext (Case e (x,e1) (y,e2))) =
+  case smallStep e of
+    Just e' -> Just (Ext (Case e' (x,e1) (y,e2)))
+    Nothing -> Nothing
+
+smallStep (Ext (Inl e)) =
+  case smallStep e of
+    Just e' -> Just $ Ext $ Inl e'
+    Nothing -> Nothing
+
+smallStep (Ext (Inr e)) =
+  case smallStep e of
+    Just e' -> Just $ Ext $ Inr e'
+    Nothing -> Nothing
 
 -- other Ext terms
 smallStep (Ext _) = Nothing
@@ -78,19 +95,8 @@ substitute (Var y) (x, e')
 substitute (App e1 e2) (x, e') =
   App (substitute e1 (x, e')) (substitute e2 (x, e'))
 
-substitute (Abs y e) (x, e')
-  -- Name clash in lambda abstraction
-  | x == y = Abs y e
-  -- If e' contains y (then we have to be super careful)
-  | y `Set.member` free_vars e' =
-    let y' = fresh_var y (free_vars e' `Set.union` free_vars e)
-    in Abs y' (substitute (substitute e (y, Var y')) (x, e'))
-
-  -- Example: substitute (\y -> x y) (x, y y)
-  --           = (\y' -> (y y) y')
-
-  -- No name clash
-  | otherwise = Abs y (substitute e (x, e'))
+substitute (Abs y e) s =
+  let (y', e') = substitute_binding y e s in Abs y' e'
 
 substitute (Sig e t) s = Sig (substitute e s) t
 
@@ -100,20 +106,38 @@ substitute (Ext Succ) s                    = Ext Succ
 
 substitute (Ext (Fix e)) s                 = Ext $ Fix $ substitute e s
 
-substitute (Ext (Case e1 e2 (y,e3))) (x,e) =
-  let e1' = substitute e1 (x,e)
-      e2' = substitute e2 (x,e)
-  in if x == y then Ext $ Case e1' e2' (y,e3)
-  else if y `Set.member` free_vars e then
-    let y' = fresh_var y (free_vars e `Set.union` free_vars e3)
-    in Ext $ Case e1' e2' (y', substitute (substitute e3 (y, Var y')) (x,e))
-  else Ext $ Case e1' e2' (y, substitute e3 (x,e))
+substitute (Ext (NatCase e e1 (y,e2))) s =
+  let e'  = substitute e s
+      e1' = substitute e1 s
+      (y', e2') = substitute_binding y e2 s
+  in Ext $ NatCase e' e1' (y', e2')
 
 substitute (Ext (Pair e1 e2)) s =
   Ext $ Pair (substitute e1 s) (substitute e2 s)
 
 substitute (Ext (Fst e)) s = Ext $ Fst $ substitute e s
 substitute (Ext (Snd e)) s = Ext $ Snd $ substitute e s
+
+substitute (Ext (Case e (x,e1) (y,e2))) s =
+  let e' = substitute e s
+      (x', e1') = substitute_binding x e1 s
+      (y', e2') = substitute_binding y e2 s
+  in Ext $ Case e' (x', e1') (y', e2')
+
+substitute (Ext (Inl e)) s = Ext $ Inl $ substitute e s
+substitute (Ext (Inr e)) s = Ext $ Inr $ substitute e s
+
+
+-- substitute_binding x e (y,e') substitutes e' into e for y, but assumes e has just had binder x introduced
+substitute_binding :: Identifier -> Expr PCF -> (Identifier, Expr PCF) -> (Identifier, Expr PCF)
+substitute_binding x e (y,e')
+  -- Name clash in binding - we are done
+  | x == y = (x, e)
+  -- If expression to be bound contains already bound variable
+  | x `Set.member` free_vars e' =
+    let x' = fresh_var x (free_vars e `Set.union` free_vars e')
+    in (x', substitute (substitute e (x, Var x')) (y, e'))
+  | otherwise = (x, substitute e (y,e'))
 
 -- Keep doing small step reductions until normal form reached
 multiStep :: Expr PCF -> (Expr PCF, Int)

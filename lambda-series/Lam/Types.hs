@@ -53,7 +53,7 @@ check gamma (Abs x expr) (FunTy tyA tyB) =
 --- PCF rules
 check gamma (Ext (Fix e)) t = check gamma e (FunTy t t)
 
-check gamma (Ext (Case e e1 (x,e2))) t =
+check gamma (Ext (NatCase e e1 (x,e2))) t =
   check gamma e NatTy &&
   check gamma e1 t &&
   check ([(x,NatTy)] ++ gamma) e2 t
@@ -72,6 +72,19 @@ check gamma (Ext (Fst e)) t =
 check gamma (Ext (Snd e)) t =
   case synth gamma e of
     Just (ProdTy t1 t2) -> t == t2
+    _ -> False
+
+check gamma (Ext (Inl e)) (SumTy t1 t2) = check gamma e t1
+check gamma (Ext (Inl e)) _ = False
+
+check gamma (Ext (Inr e)) (SumTy t1 t2) = check gamma e t2
+check gamma (Ext (Inr e)) _ = False
+
+check gamma (Ext (Case e (x,e1) (y,e2))) t =
+  case synth gamma e of
+    Just (SumTy t1 t2) ->
+      check ([(x,t1)] ++ gamma) e1 t &&
+      check ([(y,t2)] ++ gamma) e2 t
     _ -> False
 
 
@@ -163,7 +176,7 @@ synth gamma (Ext Zero) =
 synth gamma (Ext Succ) =
   Just (FunTy NatTy NatTy)
 
-synth gamma (Ext (Case e e1 (x,e2))) =
+synth gamma (Ext (NatCase e e1 (x,e2))) =
   if check gamma e NatTy then
     case synth gamma e1 of
       Just t ->
@@ -207,6 +220,25 @@ synth gamma (Ext (Snd e)) =
     Just t -> error $ "Expecting (" ++ pprint e ++ ") to have product type but got " ++ pprint t
     Nothing -> error $ "Could not synth type for " ++ pprint e
 
+synth gamma (Ext (Case e (x,e1) (y,e2))) =
+  case synth gamma e of
+    Just (SumTy t1 t2) -> (
+      case synth ([(x,t1)] ++ gamma) e1 of
+        Just t ->
+          if check ([(y,t2)] ++ gamma) e2 t
+            then Just t
+            else error $ "Expecting (" ++ pprint e2 ++ ") to have type " ++ pprint t
+        Nothing -> (
+          case synth ([(y,t2)] ++ gamma) e2 of
+            Just t ->
+              if check ([(x,t1)] ++ gamma) e1 t
+                then Just t
+                else error $ "Expecting (" ++ pprint e1 ++ ") to have type " ++ pprint t
+            Nothing -> error $ "Could not synth types for " ++ pprint e1 ++ ", " ++ pprint e2
+          )
+        )
+    Just t -> error $ "Expecting (" ++ pprint e ++ ") to have sum type but got " ++ pprint t
+    Nothing -> error $ "Could not synth type for " ++ pprint e
 
 {-
 
