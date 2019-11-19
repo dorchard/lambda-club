@@ -20,25 +20,35 @@ import Lam.Syntax
 %monad { ReaderT String (Either String) }
 
 %token
-    nl    { TokenNL _ }
-    let   { TokenLet _ }
-    case  { TokenCase _ }
-    of    { TokenOf _ }
-    '|'   { TokenSep _ }
-    fix   { TokenFix _ }
-    in    { TokenIn  _  }
-    zero  { TokenZero _ }
-    succ  { TokenSucc _ }
-    VAR    { TokenSym _ _ }
-    LANG   { TokenLang _ _ }
-    CONSTR { TokenConstr _ _ }
-    '\\'  { TokenLambda _ }
-    '->'  { TokenArrow _ }
-    '='   { TokenEq _ }
-    '('   { TokenLParen _ }
-    ')'   { TokenRParen _ }
-    ':'   { TokenSig _ }
-    '?'   { TokenHole _ }
+    nl      { TokenNL _ }
+    let     { TokenLet _ }
+    case    { TokenCase _ }
+    natcase { TokenNatCase _ }
+    of      { TokenOf _ }
+    '|'     { TokenSep _ }
+    fix     { TokenFix _ }
+    fst     { TokenFst _ }
+    snd     { TokenSnd _ }
+    inl     { TokenInl _ }
+    inr     { TokenInr _ }
+    in      { TokenIn  _  }
+    zero    { TokenZero _ }
+    succ    { TokenSucc _ }
+    VAR     { TokenSym _ _ }
+    LANG    { TokenLang _ _ }
+    CONSTR  { TokenConstr _ _ }
+    '\\'    { TokenLambda _ }
+    '->'    { TokenArrow _ }
+    '='     { TokenEq _ }
+    '('     { TokenLParen _ }
+    ')'     { TokenRParen _ }
+    ':'     { TokenSig _ }
+    '?'     { TokenHole _ }
+    '*'     { TokenProd _ }
+    '+'     { TokenSum _ }
+    '<'     { TokenLPair _ }
+    '>'     { TokenRPair _ }
+    ', '    { TokenMPair _ }
 
 %right in
 %right '->'
@@ -91,16 +101,55 @@ Expr :: { [Option] -> Expr PCF }
         then Ext (Fix ($3 opts))
         else error "`fix` doesn't exists in the lambda calculus" }
 
-  | case Expr of zero '->' Expr '|' succ VAR '->' Expr
+  | natcase Expr of zero '->' Expr '|' succ VAR '->' Expr
      { \opts ->
           if isPCF opts
-            then Ext (Case ($2 opts) ($6 opts) (symString $9, ($11 opts)))
+            then Ext (NatCase ($2 opts) ($6 opts) (symString $9, ($11 opts)))
+            else error "`natcase` doesn't exist in the lambda calculus" }
+
+  | '<' Expr ', ' Expr '>'
+     { \opts ->
+          if isPCF opts
+            then Ext (Pair ($2 opts) ($4 opts))
+            else error "pairs don't exists in the lambda calculus"}
+
+  | fst '(' Expr ')'
+     { \opts ->
+      if isPCF opts
+        then Ext (Fst ($3 opts))
+        else error "`fst` doesn't exists in the lambda calculus" }
+
+  | snd '(' Expr ')'
+     { \opts ->
+      if isPCF opts
+        then Ext (Snd ($3 opts))
+        else error "`snd` doesn't exists in the lambda calculus" }
+
+  | inl '(' Expr ')'
+     { \opts ->
+      if isPCF opts
+        then Ext (Inl ($3 opts))
+        else error "`inl` doesn't exists in the lambda calculus" }
+
+  | inr '(' Expr ')'
+     { \opts ->
+      if isPCF opts
+        then Ext (Inr ($3 opts))
+        else error "`inr` doesn't exists in the lambda calculus" }
+
+ | case Expr of inl VAR '->' Expr '|' inr VAR '->' Expr
+     { \opts ->
+          if isPCF opts
+            then Ext (Case ($2 opts) (symString $5, $7 opts) (symString $10, ($12 opts)))
             else error "`case` doesn't exist in the lambda calculus" }
+
 
 Type :: { Type }
 Type
-  : CONSTR           { if constrString $1 == "Nat" then NatTy else error "What?" }
+  : CONSTR           { if constrString $1 == "Nat" then NatTy else error $ "Unknown type constructor " ++ constrString $1 }
   | Type '->' Type   { FunTy $1 $3 }
+  | Type '*' Type    { ProdTy $1 $3}
+  | Type '+' Type    { SumTy $1 $3 }
   | '(' Type ')'     { $2 }
 
 Juxt :: { [Option] -> Expr PCF }
