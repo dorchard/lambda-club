@@ -23,8 +23,9 @@ See `simple.lam` and `test.lam`.
     calculus
  - [x]  Session 5: Algorithmically defining a type system: type checking and 
     type inference [video (Kent only)](https://kent.cloud.panopto.eu/Panopto/Pages/Viewer.aspx?id=86ff0fcd-1702-4c92-8102-aaf600fa82a8)
- - [ ] Session 6: PCF and PCF typing
- - [ ] Session 7: The Curry-Howard correspondence in more detail (types vs. logic)
+ - [x] Session 6: PCF and PCF typing
+ - [x] Session 7: The Curry-Howard correspondence in more detail (types vs. logic)
+ - [x] Session 8: Call-By-Value vs. Call-By-Name reduction.
  - [ ] Session 9: Polymorphism (System F)
  - [ ] Session 10: Implementing polymorphic types (Hindley-Milner algorithm 
     and related).
