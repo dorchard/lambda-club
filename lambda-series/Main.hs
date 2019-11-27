@@ -1,13 +1,14 @@
 module Lam where
 
+import Lam.Options
 import Lam.Parser      (parseProgram)
 import Lam.PrettyPrint (pprint)
 import Lam.Semantics   (multiStep)
-import Lam.Syntax      (isTyped)
 import Lam.Types
 
 import System.Directory   (doesPathExist)
 import System.Environment (getArgs)
+import System.Exit
 import Control.Monad      (when)
 
 main :: IO ()
@@ -46,7 +47,9 @@ main = do
                    Just ty -> putStrLn $ "\n " <> ansi_bold <> ansi_green
                                                <> "Well-typed " <> ansi_reset
                                                <> ansi_bold <> "as " <> ansi_reset <>pprint ty)
-            Left msg -> error msg
+            Left msg -> do
+              putStrLn $ ansi_red ++ "Error: " ++ ansi_reset ++ msg
+              exitFailure
 
 ansi_red, ansi_green, ansi_reset, ansi_bold :: String
 ansi_red   = "\ESC[31;1m"

@@ -21,6 +21,7 @@ executable lcore
       Lam.FirstParameter
       Lam.Helpers
       Lam.Lexer
+      Lam.Options
       Lam.Parser
       Lam.PrettyPrint
       Lam.Semantics

@@ -105,20 +105,3 @@ free_vars (Ext _)                       = Set.empty
 fresh_var :: Identifier -> Set.Set Identifier -> Identifier
 fresh_var var vars =
   if var `Set.member` vars then fresh_var (var ++ "'") vars else var
-
-------------------------------
--- Language options that `lcore` accepts in files
-
-data Option = PCF | Typed
-  deriving Eq
-
--- Some helpers
-
-isPCF :: [Option] -> Bool
-isPCF options = elem PCF options
-
-isTyped :: [Option] -> Bool
-isTyped options = elem Typed options
-
-language :: [Option] -> String
-language options = if isPCF options then "PCF" else "lambda"

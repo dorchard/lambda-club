@@ -10,6 +10,7 @@ import Control.Monad.Trans.Class (lift)
 
 import Lam.Lexer
 import Lam.Syntax
+import Lam.Options
 
 }
 
@@ -61,7 +62,7 @@ Program :: { (Expr PCF, [Option]) }
   : LangOpts Defs  { ($2 $1, $1) }
 
 LangOpts :: { [Option] }
-  : LANG nl LangOpts    { (readOption $1) : $3 }
+  : LANG nl LangOpts    {% (readOption $1) >>= (\opt -> addOption opt $3) }
   | {- empty -}         { [] }
 
 Defs :: { [Option] -> Expr PCF }
@@ -77,7 +78,7 @@ Def :: { [Option] -> Expr PCF -> Expr PCF }
   | zero '=' Expr { \opts ->
         if isPCF opts
           then error "Cannot use 'zero' as a variable name"
-          else  \program -> App (Abs "zero" program) ($3 opts) }
+          else \program -> App (Abs "zero" program) ($3 opts) }
   | succ '=' Expr { \opts ->
         if isPCF opts
           then error "Cannot use 'succ' as a variable name"
@@ -175,14 +176,16 @@ Atom :: { [Option] -> Expr PCF }
 
 {
 
-readOption :: Token -> Option
-readOption (TokenLang _ x) | x == "lang.pcf"   = PCF
-readOption (TokenLang _ x) | x == "lang.typed" = Typed
-readOption (TokenLang _ x) = error $ "Unknown language option: " <> x
-readOption _ = error "Wrong token for language"
+readOption :: Token -> ReaderT String (Either String) Option
+readOption (TokenLang _ x) | x == "lang.pcf"   = return PCF
+readOption (TokenLang _ x) | x == "lang.typed" = return Typed
+readOption (TokenLang _ x) | x == "lang.cbv"   = return CBV
+readOption (TokenLang _ x) | x == "lang.cbn"   = return CBN
+readOption (TokenLang _ x) = lift . Left $ "Unknown language option: " <> x
+readOption _ = lift . Left $ "Wrong token for language"
 
 parseError :: [Token] -> ReaderT String (Either String) a
-parseError [] = lift $ Left "Premature end of file"
+parseError [] = lift . Left $ "Premature end of file"
 parseError t  =  do
     file <- ask
     lift . Left $ file <> ":" <> show l <> ":" <> show c
@@ -191,8 +194,5 @@ parseError t  =  do
 
 parseProgram :: FilePath -> String -> Either String (Expr PCF, [Option])
 parseProgram file input = runReaderT (program $ scanTokens input) file
-
-failWithMsg :: String -> IO a
-failWithMsg msg = putStrLn msg >> exitFailure
 
 }
