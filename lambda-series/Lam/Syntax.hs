@@ -40,6 +40,12 @@ data PCF =
                                -- case e of inl x -> e1 | inr y -> e2
   deriving Show
 
+isNatVal :: Expr PCF -> Bool
+isNatVal (Ext Zero)  = True
+isNatVal (Ext Succ)  = True
+isNatVal (App e1 e2) = isNatVal e1 && isNatVal e2
+isNatVal _           = False
+
 ------------------------------
 -- Type syntax
 
