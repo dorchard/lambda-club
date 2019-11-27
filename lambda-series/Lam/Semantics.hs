@@ -8,19 +8,19 @@ import qualified Data.Set as Set
 smallStep :: Expr PCF -> Maybe (Expr PCF)
 smallStep (Var _) = Nothing
 -- Beta reduction
-smallStep (App (Abs x e) e') =
+smallStep (App (Abs x e) e') | isValue e' =
   Just (substitute e (x, e'))
 -- App rules
 smallStep (App e1 e2) =
   case smallStep e1 of
-    -- App L rule
+    -- App L rule -- (zeta 1, prioritised over zeta 2)
     Just e1' -> Just (App e1' e2)
     Nothing ->
       case smallStep e2 of
         Nothing -> Nothing
-        -- App R rule
+        -- App R rule -- (zeta 2)
         Just e2' -> Just (App e1 e2')
--- Abs rule
+-- Abs rule -- (zeta 3)
 smallStep (Abs x e) =
   case smallStep e of
     Just e' -> Just (Abs x e')
