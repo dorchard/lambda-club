@@ -14,7 +14,7 @@ fullBeta (App e1 e2) =
   -- Prefer fully zeta1 reducing before zeta2 reducing
   case zeta1 fullBeta e1 e2 of
     Just e1' -> Just (App e1' e2)
-    Nothing -> (\e2' -> App e1 e2') `fmap` zeta2 fullBeta e1 e2
+    Nothing -> (\e2' -> App e1 e2') <$> zeta2 fullBeta e1 e2
 fullBeta (Abs x e) = zeta3 fullBeta x e
 fullBeta (Sig e _) = Just e
 fullBeta (Ext e) = reduceExtension fullBeta (Ext e)
@@ -22,7 +22,7 @@ fullBeta (Ext e) = reduceExtension fullBeta (Ext e)
 callByName :: Reducer PCF
 callByName (Var _) = Nothing
 callByName (App (Abs x e) e') = beta e x e'
-callByName (App e1 e2) = (\e1' -> App e1' e2) `fmap` zeta1 callByName e1 e2
+callByName (App e1 e2) = (\e1' -> App e1' e2) <$> zeta1 callByName e1 e2
 callByName (Abs x e) = Nothing
 callByName (Sig e _) = Just e
 callByName (Ext e) = reduceExtension callByName (Ext e)
@@ -40,13 +40,13 @@ beta :: Expr PCF -> Identifier -> Expr PCF -> Maybe (Expr PCF)
 beta e x e' = Just (substitute e (x, e'))
 
 zeta1 :: Reducer PCF -> Expr PCF -> Expr PCF -> Maybe (Expr PCF)
-zeta1 step e1 e2 = (\e1' -> App e1' e2) `fmap` step e1
+zeta1 step e1 e2 = (\e1' -> App e1' e2) <$> step e1
 
 zeta2 :: Reducer PCF -> Expr PCF -> Expr PCF -> Maybe (Expr PCF)
-zeta2 step e1 e2 = (\e2' -> App e1 e2') `fmap` step e2
+zeta2 step e1 e2 = (\e2' -> App e1 e2') <$> step e2
 
 zeta3 :: Reducer PCF -> Identifier -> Expr PCF -> Maybe (Expr PCF)
-zeta3 step x e = (\e' -> Abs x e') `fmap` step e
+zeta3 step x e = (\e' -> Abs x e') <$> step e
 
 reduceExtension :: Reducer PCF -> Reducer PCF
 reduceExtension step (Ext (Fix e)) =
@@ -59,27 +59,27 @@ reduceExtension step (Ext (NatCase (Ext Zero) e1 _)) = Just e1
 reduceExtension step (Ext (NatCase (App (Ext Succ) n) _ (x,e2))) = Just $ substitute e2 (x,n)
 
 reduceExtension step (Ext (NatCase e e1 (x,e2))) =
-  (\e' -> Ext (NatCase e' e1 (x,e2))) `fmap` step e
+  (\e' -> Ext (NatCase e' e1 (x,e2))) <$> step e
 
 reduceExtension step (Ext (Pair e1 e2)) =
   case step e1 of
     Just e1' -> Just $ Ext $ Pair e1' e2
-    Nothing -> (\e2' -> Ext $ Pair e1 e2') `fmap` step e2
+    Nothing -> (\e2' -> Ext $ Pair e1 e2') <$> step e2
 
 reduceExtension step (Ext (Fst (Ext (Pair e1 e2)))) = Just e1
 reduceExtension step (Ext (Snd (Ext (Pair e1 e2)))) = Just e2
 
-reduceExtension step (Ext (Fst e)) = (\e' -> Ext $ Fst e') `fmap` step e
-reduceExtension step (Ext (Snd e)) = (\e' -> Ext $ Snd e') `fmap` step e
+reduceExtension step (Ext (Fst e)) = (\e' -> Ext $ Fst e') <$> step e
+reduceExtension step (Ext (Snd e)) = (\e' -> Ext $ Snd e') <$> step e
 
 reduceExtension step (Ext (Case (Ext (Inl e)) (x,e1) _)) = Just $ substitute e1 (x,e)
 reduceExtension step (Ext (Case (Ext (Inr e)) _ (y,e2))) = Just $ substitute e2 (y,e)
 
 reduceExtension step (Ext (Case e (x,e1) (y,e2))) =
-  (\e' -> Ext (Case e' (x,e1) (y,e2))) `fmap` step e
+  (\e' -> Ext (Case e' (x,e1) (y,e2))) <$> step e
 
-reduceExtension step (Ext (Inl e)) = (\e' -> Ext $ Inl e') `fmap` step e
-reduceExtension step (Ext (Inr e)) = (\e' -> Ext $ Inr e') `fmap` step e
+reduceExtension step (Ext (Inl e)) = (\e' -> Ext $ Inl e') <$> step e
+reduceExtension step (Ext (Inr e)) = (\e' -> Ext $ Inr e') <$> step e
 
 -- other Ext terms
 reduceExtension step (Ext _) = Nothing
