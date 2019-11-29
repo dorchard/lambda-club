@@ -54,10 +54,7 @@ zeta3 step x e = (\e' -> Abs x e') <$> step e
 reducePCF :: Reducer (Expr PCF) -> Reducer (Expr PCF)
 
 -- Fix point
-reducePCF step (Ext (Fix e)) =
-  case step e of
-    Just e' -> Just (Ext $ Fix e')
-    Nothing -> Just $ App e (Ext $ Fix e)
+reducePCF step (Ext (Fix e)) = return $ App e (Ext $ Fix e)
 
 -- Beta-rules for Nat
 reducePCF step (Ext (NatCase (Ext Zero) e1 _)) = Just e1
