@@ -37,7 +37,7 @@ addOption opt opts =
     _ -> return $ opt : opts
 
 showReducer :: [Option] -> String
-showReducer opts | isCBV opts      = "callByValue"
-showReducer opts | isCBN opts      = "smallStep"
-showReducer opts | isFullBeta opts = "fullBeta"
+showReducer opts | isCBV opts      = "Call-By-Value"
+showReducer opts | isCBN opts      = "Call-By-Name"
+showReducer opts | isFullBeta opts = "Determinised full beta"
 showReducer _ = "no reducer statisfied the options"
