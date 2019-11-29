@@ -36,3 +36,8 @@ addOption opt opts =
     CBN | isCBV opts -> lift $ Left "Cannot choose both CBN and CBV."
     _ -> return $ opt : opts
 
+showReducer :: [Option] -> String
+showReducer opts | isCBV opts      = "callByValue"
+showReducer opts | isCBN opts      = "smallStep"
+showReducer opts | isFullBeta opts = "fullBeta"
+showReducer _ = "no reducer statisfied the options"

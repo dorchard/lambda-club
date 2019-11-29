@@ -1,90 +1,91 @@
 module Lam.Semantics where
 
 import Lam.Syntax
+import Lam.Options
 
 import qualified Data.Set as Set
 
--- Small-step operational semantics reduction
-smallStep :: Expr PCF -> Maybe (Expr PCF)
-smallStep (Var _) = Nothing
--- Beta reduction
-smallStep (App (Abs x e) e') | isValue e' =
-  Just (substitute e (x, e'))
--- App rules
-smallStep (App e1 e2) =
-  case smallStep e1 of
-    -- App L rule -- (zeta 1, prioritised over zeta 2)
+type Reducer a = Expr a -> Maybe (Expr a)
+
+fullBeta :: Reducer PCF
+fullBeta (Var _) = Nothing
+fullBeta (App (Abs x e) e') = beta e x e'
+fullBeta (App e1 e2) =
+  -- Prefer fully zeta1 reducing before zeta2 reducing
+  case zeta1 fullBeta e1 e2 of
     Just e1' -> Just (App e1' e2)
-    Nothing ->
-      case smallStep e2 of
-        Nothing -> Nothing
-        -- App R rule -- (zeta 2)
-        Just e2' -> Just (App e1 e2')
--- Abs rule -- (zeta 3)
-smallStep (Abs x e) =
-  case smallStep e of
-    Just e' -> Just (Abs x e')
-    Nothing -> Nothing
+    Nothing -> (\e2' -> App e1 e2') <$> zeta2 fullBeta e1 e2
+fullBeta (Abs x e) = zeta3 fullBeta x e
+fullBeta (Sig e _) = Just e
+fullBeta (Ext e) = reduceExtension fullBeta (Ext e)
 
-smallStep (Sig e _) = Just e
+callByName :: Reducer PCF
+callByName (Var _) = Nothing
+callByName (App (Abs x e) e') = beta e x e'
+callByName (App e1 e2) = (\e1' -> App e1' e2) <$> zeta1 callByName e1 e2
+callByName (Abs x e) = Nothing
+callByName (Sig e _) = Just e
+callByName (Ext e) = reduceExtension callByName (Ext e)
+  
+callByValue :: Reducer PCF
+callByValue (Var _) = Nothing
+callByValue (App (Abs x e) e') | isValue e' = beta e x e'
+callByValue (App e1 e2) | isValue e1 = zeta2 callByValue e1 e2
+callByValue (App e1 e2) = zeta1 callByValue e1 e2
+callByValue (Abs x e) = Nothing
+callByValue (Sig e _) = Just e
+callByValue (Ext e) = reduceExtension callByValue (Ext e)
 
--- Small-step for PCF terms
-smallStep (Ext (Fix e)) =
-  case smallStep e of
+beta :: Expr PCF -> Identifier -> Expr PCF -> Maybe (Expr PCF)
+beta e x e' = Just (substitute e (x, e'))
+
+zeta1 :: Reducer PCF -> Expr PCF -> Expr PCF -> Maybe (Expr PCF)
+zeta1 step e1 e2 = (\e1' -> App e1' e2) <$> step e1
+
+zeta2 :: Reducer PCF -> Expr PCF -> Expr PCF -> Maybe (Expr PCF)
+zeta2 step e1 e2 = (\e2' -> App e1 e2') <$> step e2
+
+zeta3 :: Reducer PCF -> Identifier -> Expr PCF -> Maybe (Expr PCF)
+zeta3 step x e = (\e' -> Abs x e') <$> step e
+
+reduceExtension :: Reducer PCF -> Reducer PCF
+reduceExtension step (Ext (Fix e)) =
+  case step e of
     Just e' -> Just (Ext $ Fix e')
     Nothing -> Just $ App e (Ext $ Fix e)
 
-smallStep (Ext (NatCase (Ext Zero) e1 _)) = Just e1
+reduceExtension step (Ext (NatCase (Ext Zero) e1 _)) = Just e1
 
-smallStep (Ext (NatCase (App (Ext Succ) n) _ (x,e2))) = Just $ substitute e2 (x,n)
+reduceExtension step (Ext (NatCase (App (Ext Succ) n) _ (x,e2))) = Just $ substitute e2 (x,n)
 
-smallStep (Ext (NatCase e e1 (x,e2))) =
-  case smallStep e of
-    Just e' -> Just (Ext (NatCase e' e1 (x,e2)))
-    Nothing -> Nothing
+reduceExtension step (Ext (NatCase e e1 (x,e2))) =
+  (\e' -> Ext (NatCase e' e1 (x,e2))) <$> step e
 
-smallStep (Ext (Pair e1 e2)) =
-  case smallStep e1 of
+reduceExtension step (Ext (Pair e1 e2)) =
+  case step e1 of
     Just e1' -> Just $ Ext $ Pair e1' e2
-    Nothing -> (
-      case smallStep e2 of
-        Just e2' -> Just $ Ext $ Pair e1 e2'
-        Nothing -> Nothing
-      )
+    Nothing -> (\e2' -> Ext $ Pair e1 e2') <$> step e2
 
-smallStep (Ext (Fst (Ext (Pair e1 e2)))) = Just e1
-smallStep (Ext (Snd (Ext (Pair e1 e2)))) = Just e2
+reduceExtension step (Ext (Fst (Ext (Pair e1 e2)))) = Just e1
+reduceExtension step (Ext (Snd (Ext (Pair e1 e2)))) = Just e2
 
-smallStep (Ext (Fst e)) =
-  case smallStep e of
-    Just e' -> Just $ Ext $ Fst e'
-    Nothing -> Nothing
+reduceExtension step (Ext (Fst e)) = (\e' -> Ext $ Fst e') <$> step e
+reduceExtension step (Ext (Snd e)) = (\e' -> Ext $ Snd e') <$> step e
 
-smallStep (Ext (Snd e)) =
-  case smallStep e of
-    Just e' -> Just $ Ext $ Snd e'
-    Nothing -> Nothing
+reduceExtension step (Ext (Case (Ext (Inl e)) (x,e1) _)) = Just $ substitute e1 (x,e)
+reduceExtension step (Ext (Case (Ext (Inr e)) _ (y,e2))) = Just $ substitute e2 (y,e)
 
-smallStep (Ext (Case (Ext (Inl e)) (x,e1) _)) = Just $ substitute e1 (x,e)
-smallStep (Ext (Case (Ext (Inr e)) _ (y,e2))) = Just $ substitute e2 (y,e)
+reduceExtension step (Ext (Case e (x,e1) (y,e2))) =
+  (\e' -> Ext (Case e' (x,e1) (y,e2))) <$> step e
 
-smallStep (Ext (Case e (x,e1) (y,e2))) =
-  case smallStep e of
-    Just e' -> Just (Ext (Case e' (x,e1) (y,e2)))
-    Nothing -> Nothing
-
-smallStep (Ext (Inl e)) =
-  case smallStep e of
-    Just e' -> Just $ Ext $ Inl e'
-    Nothing -> Nothing
-
-smallStep (Ext (Inr e)) =
-  case smallStep e of
-    Just e' -> Just $ Ext $ Inr e'
-    Nothing -> Nothing
+reduceExtension step (Ext (Inl e)) = (\e' -> Ext $ Inl e') <$> step e
+reduceExtension step (Ext (Inr e)) = (\e' -> Ext $ Inr e') <$> step e
 
 -- other Ext terms
-smallStep (Ext _) = Nothing
+reduceExtension step (Ext _) = Nothing
+
+-- Non Ext terms
+reduceExtension _ _ = error "invalid term"
 
 -- `substitute e (x, e')` means e[e'/x]
 substitute :: Expr PCF -> (Identifier, Expr PCF) -> Expr PCF
@@ -140,14 +141,15 @@ substitute_binding x e (y,e')
   | otherwise = (x, substitute e (y,e'))
 
 -- Keep doing small step reductions until normal form reached
-multiStep :: Expr PCF -> (Expr PCF, Int)
-multiStep e = multiStep' e 0
+multiStep :: [Option] -> Expr PCF -> (Expr PCF, Int)
+multiStep opts e | isCBV opts = multiStep' callByValue e 0
+multiStep opts e | isCBN opts = multiStep' callByName e 0
+multiStep _    e              = multiStep' fullBeta e 0
 
-multiStep' :: Expr PCF -> Int -> (Expr PCF, Int)
-multiStep' t n =
-    case smallStep t of
-      -- Normal form reached
-      Nothing -> (t, n)
-      -- Can do more reduction
-      Just t' -> multiStep' t' (n+1)
-
+multiStep' :: Reducer PCF -> Expr PCF -> Int -> (Expr PCF, Int)
+multiStep' step t n =
+  case step t of
+    -- Normal form reached
+    Nothing -> (t, n)
+    -- Can do more reduction
+    Just t' -> multiStep' step t' (n+1)
