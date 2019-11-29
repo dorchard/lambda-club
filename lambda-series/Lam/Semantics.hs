@@ -52,35 +52,45 @@ zeta3 step x e = (\e' -> Abs x e') <$> step e
 
 -- Reducer for the extended PCF syntax
 reducePCF :: Reducer (Expr PCF) -> Reducer (Expr PCF)
+
+-- Fix point
 reducePCF step (Ext (Fix e)) =
   case step e of
     Just e' -> Just (Ext $ Fix e')
     Nothing -> Just $ App e (Ext $ Fix e)
 
+-- Beta-rules for Nat
 reducePCF step (Ext (NatCase (Ext Zero) e1 _)) = Just e1
 
 reducePCF step (Ext (NatCase (App (Ext Succ) n) _ (x,e2))) = Just $ substitute e2 (x,n)
 
+-- Congruence for Nat-eliminator
 reducePCF step (Ext (NatCase e e1 (x,e2))) =
   (\e' -> Ext (NatCase e' e1 (x,e2))) <$> step e
 
+-- Congruence for productor constructor
 reducePCF step (Ext (Pair e1 e2)) =
   case step e1 of
     Just e1' -> Just $ Ext $ Pair e1' e2
     Nothing -> (\e2' -> Ext $ Pair e1 e2') <$> step e2
 
+-- Beta-rules for products
 reducePCF step (Ext (Fst (Ext (Pair e1 e2)))) = Just e1
 reducePCF step (Ext (Snd (Ext (Pair e1 e2)))) = Just e2
 
+-- Congruence rules for product eliminators
 reducePCF step (Ext (Fst e)) = (\e' -> Ext $ Fst e') <$> step e
 reducePCF step (Ext (Snd e)) = (\e' -> Ext $ Snd e') <$> step e
 
+-- Beta-rules for sum types
 reducePCF step (Ext (Case (Ext (Inl e)) (x,e1) _)) = Just $ substitute e1 (x,e)
 reducePCF step (Ext (Case (Ext (Inr e)) _ (y,e2))) = Just $ substitute e2 (y,e)
 
+-- Congruence for sum eliminator
 reducePCF step (Ext (Case e (x,e1) (y,e2))) =
   (\e' -> Ext (Case e' (x,e1) (y,e2))) <$> step e
 
+-- Congruence for sum constructor
 reducePCF step (Ext (Inl e)) = (\e' -> Ext $ Inl e') <$> step e
 reducePCF step (Ext (Inr e)) = (\e' -> Ext $ Inr e') <$> step e
 
@@ -90,7 +100,7 @@ reducePCF step (Ext _) = Nothing
 -- Non Ext terms
 reducePCF _ _ = error "invalid term"
 
--- `substitute e (x, e')` means e[e'/x]
+-- Syntactic substitution - `substitute e (x, e')` means e[e'/x]
 substitute :: Expr PCF -> (Identifier, Expr PCF) -> Expr PCF
 substitute (Var y) (x, e')
   | x == y = e'
@@ -130,7 +140,6 @@ substitute (Ext (Case e (x,e1) (y,e2))) s =
 
 substitute (Ext (Inl e)) s = Ext $ Inl $ substitute e s
 substitute (Ext (Inr e)) s = Ext $ Inr $ substitute e s
-
 
 -- substitute_binding x e (y,e') substitutes e' into e for y, but assumes e has just had binder x introduced
 substitute_binding :: Identifier -> Expr PCF -> (Identifier, Expr PCF) -> (Identifier, Expr PCF)
