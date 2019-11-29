@@ -1,4 +1,0 @@
-lang.pcf
-lang.cbv
-
-(\x -> \y -> x) zero (fix (\x -> x))
