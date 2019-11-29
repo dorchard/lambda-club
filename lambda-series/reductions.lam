@@ -1,4 +1,4 @@
 lang.pcf
-lang.cbn
+lang.cbv
 
 (\x -> \y -> x) zero (fix (\x -> x))

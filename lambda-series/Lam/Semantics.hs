@@ -13,7 +13,7 @@ fullBeta (App (Abs x e) e') = beta e x e'
 fullBeta (App e1 e2) =
   -- Prefer fully zeta1 reducing before zeta2 reducing
   case zeta1 fullBeta e1 e2 of
-    Just e1' -> Just (App e1' e2)
+    Just e -> Just e
     Nothing -> zeta2 fullBeta e1 e2
 fullBeta (Abs x e) = zeta3 fullBeta x e
 fullBeta (Sig e _) = Just e
