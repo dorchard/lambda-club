@@ -30,7 +30,11 @@ instance PrettyPrint ex => PrettyPrint (Expr ex) where
     pprint (App e1 e2) = pprint e1 ++ " " ++ bracket_pprint e2
     pprint (Var var) = var
     pprint (Sig e t) = bracket_pprint e ++ " : " ++ pprint t
+    -- Source extensions
     pprint (Ext e) = pprint e
+    -- Poly
+    pprint (TyAbs var e) = "/\\" ++ var ++ " -> " ++ pprint e
+    pprint (TyEmbed t) = "." ++ bracket_pprint t
 
 instance PrettyPrint PCF where
     isLexicallyAtomic Zero    = True
@@ -56,6 +60,7 @@ instance PrettyPrint () where
 
 instance PrettyPrint Type where
     isLexicallyAtomic NatTy = True
+    isLexicallyAtomic (TyVar _) = True
     isLexicallyAtomic _     = False
 
     pprint NatTy = "Nat"
@@ -65,3 +70,5 @@ instance PrettyPrint Type where
       bracket_pprint tyA ++ " * " ++ bracket_pprint tyB
     pprint (SumTy tyA tyB) =
       bracket_pprint tyA ++ " + " ++ bracket_pprint tyB
+    pprint (TyVar var) = var
+    pprint (Forall var t) = "forall " ++ var ++ " . " ++ pprint t

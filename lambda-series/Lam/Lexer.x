@@ -37,6 +37,7 @@ tokens :-
   "--".*                        ;
   @constr                       { \p s -> TokenConstr p s }
   lang.@langPrag                { \p s -> TokenLang p s }
+  forall                        { \p _ -> TokenForall p }
   let                           { \p s -> TokenLet p }
   in                            { \p s -> TokenIn p }
   succ                          { \p s -> TokenSucc p }
@@ -53,6 +54,7 @@ tokens :-
   @sym				                  { \p s -> TokenSym p s }
   "->"                          { \p s -> TokenArrow p }
   \\                            { \p s -> TokenLambda p }
+  \/\\                          { \p s -> TokenTyLambda p }
   \=                            { \p s -> TokenEq p }
   \(                            { \p s -> TokenLParen p }
   \)                            { \p s -> TokenRParen p }
@@ -63,6 +65,7 @@ tokens :-
   "<"                           { \p s -> TokenLPair p }
   ">"                           { \p s -> TokenRPair p }
   ", "                          { \p s -> TokenMPair p }
+  \.                            { \p _ -> TokenDot p }
 
 {
 
@@ -75,6 +78,7 @@ data Token
   | TokenFix      AlexPosn
   | TokenLet      AlexPosn
   | TokenIn       AlexPosn
+  | TokenTyLambda  AlexPosn
   | TokenLambda   AlexPosn
   | TokenSym      AlexPosn String
   | TokenZero     AlexPosn
@@ -97,6 +101,8 @@ data Token
   | TokenSnd      AlexPosn
   | TokenInl      AlexPosn
   | TokenInr      AlexPosn
+  | TokenForall   AlexPosn
+  | TokenDot      AlexPosn
   deriving (Eq, Show, Generic)
 
 symString :: Token -> String

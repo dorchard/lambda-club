@@ -38,7 +38,9 @@ import Lam.Options
     VAR     { TokenSym _ _ }
     LANG    { TokenLang _ _ }
     CONSTR  { TokenConstr _ _ }
+    forall  { TokenForall _ }
     '\\'    { TokenLambda _ }
+    Lam     { TokenTyLambda _ }
     '->'    { TokenArrow _ }
     '='     { TokenEq _ }
     '('     { TokenLParen _ }
@@ -50,6 +52,7 @@ import Lam.Options
     '<'     { TokenLPair _ }
     '>'     { TokenRPair _ }
     ', '    { TokenMPair _ }
+    '.'     { TokenDot _ }
 
 %right in
 %right '->'
@@ -91,7 +94,10 @@ Expr :: { [Option] -> Expr PCF }
   | '\\' VAR '->' Expr
     { \opts -> Abs (symString $2) ($4 opts) }
 
-  | Expr ':' Type  { \opts -> Sig ($1 opts) $3 }
+  | Lam VAR '->' Expr
+    { \opts -> TyAbs (symString $2) ($4 opts) }
+
+  | Expr ':' Type  { \opts -> Sig ($1 opts) ($3 opts) }
 
   | Juxt
     { $1 }
@@ -107,12 +113,6 @@ Expr :: { [Option] -> Expr PCF }
           if isPCF opts
             then Ext (NatCase ($2 opts) ($6 opts) (symString $9, ($11 opts)))
             else error "`natcase` doesn't exist in the lambda calculus" }
-
-  | '<' Expr ', ' Expr '>'
-     { \opts ->
-          if isPCF opts
-            then Ext (Pair ($2 opts) ($4 opts))
-            else error "pairs don't exists in the lambda calculus"}
 
   | fst '(' Expr ')'
      { \opts ->
@@ -145,13 +145,25 @@ Expr :: { [Option] -> Expr PCF }
             else error "`case` doesn't exist in the lambda calculus" }
 
 
-Type :: { Type }
+Type :: { [Option] -> Type }
 Type
-  : CONSTR           { if constrString $1 == "Nat" then NatTy else error $ "Unknown type constructor " ++ constrString $1 }
-  | Type '->' Type   { FunTy $1 $3 }
-  | Type '*' Type    { ProdTy $1 $3}
-  | Type '+' Type    { SumTy $1 $3 }
-  | '(' Type ')'     { $2 }
+  : TypeAtom         { $1 }
+  | Type '->' Type   { \opts -> FunTy ($1 opts) ($3 opts) }
+  | Type '*' Type    { \opts -> ProdTy ($1 opts) ($3 opts) }
+  | Type '+' Type    { \opts -> SumTy ($1 opts) ($3 opts) }
+  | forall VAR '.' Type { \opts ->
+                            if isPoly opts
+                              then Forall (symString $2) ($4 opts)
+                              else error "Type quantification not supported in simple types; try lang.poly. " }
+
+TypeAtom :: { [Option] -> Type }
+TypeAtom
+  : CONSTR           { \opts -> if constrString $1 == "Nat" then NatTy else error $ "Unknown type constructor " ++ constrString $1 }
+  | VAR              { \opts ->
+                          if isPoly opts
+                            then TyVar (symString $1)
+                            else error "Type variables not supported in simple types; try lang.poly." }
+  | '(' Type ')'     { \opts -> $2 opts }
 
 Juxt :: { [Option] -> Expr PCF }
   : Juxt Atom                 { \opts -> App ($1 opts) ($2 opts) }
@@ -171,6 +183,20 @@ Atom :: { [Option] -> Expr PCF }
           then Ext Succ
           else Var "succ" }
 
+  | '.' TypeAtom
+    { \opts ->
+        if isPoly opts
+          then TyEmbed ($2 opts)
+          else error "Cannot embed a type as a term; try lang.poly" }
+
+  | '<' Expr ', ' Expr '>'
+     { \opts ->
+          if isPCF opts
+            then Ext (Pair ($2 opts) ($4 opts))
+            else error "pairs don't exists in the lambda calculus"}
+
+
+
   -- For later
   -- | '?' { Hole }
 
@@ -179,6 +205,7 @@ Atom :: { [Option] -> Expr PCF }
 readOption :: Token -> ReaderT String (Either String) Option
 readOption (TokenLang _ x) | x == "lang.pcf"   = return PCF
 readOption (TokenLang _ x) | x == "lang.typed" = return Typed
+readOption (TokenLang _ x) | x == "lang.poly"  = return Poly
 readOption (TokenLang _ x) | x == "lang.cbv"   = return CBV
 readOption (TokenLang _ x) | x == "lang.cbn"   = return CBN
 readOption (TokenLang _ x) = lift . Left $ "Unknown language option: " <> x

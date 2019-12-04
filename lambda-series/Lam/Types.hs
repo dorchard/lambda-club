@@ -2,6 +2,7 @@ module Lam.Types where
 
 import Lam.Syntax
 import Lam.PrettyPrint
+import Lam.Semantics (substituteType)
 
 {-
 
@@ -87,6 +88,9 @@ check gamma (Ext (Case e (x,e1) (y,e2))) t =
       check ([(y,t2)] ++ gamma) e2 t
     _ -> False
 
+-- Poly
+-- check gamma (TyAbs var e) (Forall var' t) =
+--   check gamma e (substituteType t (var, TyVar var'))
 
 {--
 
@@ -152,6 +156,13 @@ synth gamma (App (Abs x e1) (Sig e2 tyA)) =
   G |- e1 e2 => B
 
 -}
+
+-- synth gamma (App e (TyEmbed t)) =
+--   case synth gamma e of
+--     Just (Forall var t') ->
+--       Just $ substituteType t (var, t')
+--     _ ->
+--       error $ "Expecting a polymorphically typed function to specialise for type " ++ pprint t
 
 synth gamma (App e1 e2) =
   -- Synth the left-hand side
@@ -239,6 +250,7 @@ synth gamma (Ext (Case e (x,e1) (y,e2))) =
         )
     Just t -> error $ "Expecting (" ++ pprint e ++ ") to have sum type but got " ++ pprint t
     Nothing -> error $ "Could not synth type for " ++ pprint e
+
 
 {-
 

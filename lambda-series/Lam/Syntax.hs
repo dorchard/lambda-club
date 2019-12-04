@@ -1,4 +1,5 @@
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module Lam.Syntax where
 
@@ -16,6 +17,9 @@ data Expr ex where
     Var :: Identifier            -> Expr ex -- x
 
     Sig :: Expr ex -> Type       -> Expr ex -- e : A
+
+    TyAbs   :: Identifier -> Expr ex -> Expr ex -- /\ A -> e
+    TyEmbed :: Type                  -> Expr ex -- .A
 
     -- Extend the ast at this point
     Ext :: ex -> Expr ex
@@ -55,50 +59,83 @@ isNatVal _           = False
 -- Type syntax
 
 data Type =
+  -- Simply-typed lambda calculus
     FunTy Type Type  -- A -> B
+
+  -- PCF types
   | NatTy            -- Nat
   | ProdTy Type Type -- A * B
   | SumTy Type Type  -- A + B
+
+  -- Polymorphic lambda calculus
+  | TyVar Identifier       -- a
+  | Forall Identifier Type -- forall a . A
   deriving (Show, Eq)
 
 ----------------------------
--- Bound and free variables (doesn't work over Ext terms yet)
 
-bound_vars :: Expr PCF -> Set.Set Identifier
-bound_vars (Abs var e)                  = var `Set.insert` bound_vars e
-bound_vars (App e1 e2)                  = bound_vars e1 `Set.union` bound_vars e2
-bound_vars (Var var)                    = Set.singleton var
-bound_vars (Sig e _)                    = bound_vars e
-bound_vars (Ext (NatCase e e1 (x,e2)))  =
-  x `Set.insert` (bound_vars e `Set.union` bound_vars e1 `Set.union` bound_vars e2)
-bound_vars (Ext (Fix e))                = bound_vars e
-bound_vars (Ext (Pair e1 e2))           = bound_vars e1 `Set.union` bound_vars e2
-bound_vars (Ext (Fst e))                = bound_vars e
-bound_vars (Ext (Snd e))                = bound_vars e
-bound_vars (Ext (Inl e))                = bound_vars e
-bound_vars (Ext (Inr e))                = bound_vars e
-bound_vars (Ext (Case e (x,e1) (y,e2))) =
-  bound_vars e `Set.union` (x `Set.insert` bound_vars e1) `Set.union` (y `Set.insert` bound_vars e2)
-bound_vars (Ext _)                      = Set.empty
+class Term t where
+  boundVars :: t -> Set.Set Identifier
+  freeVars  :: t -> Set.Set Identifier
+  mkVar     :: Identifier -> t
 
-free_vars :: Expr PCF -> Set.Set Identifier
-free_vars (Abs var e)                   = Set.delete var (free_vars e)
-free_vars (App e1 e2)                   = free_vars e1 `Set.union` free_vars e2
-free_vars (Var var)                     = Set.singleton var
-free_vars (Sig e _)                     = free_vars e
-free_vars (Ext (NatCase e e1 (x,e2)))   =
-  free_vars e `Set.union` free_vars e1 `Set.union` (Set.delete x (free_vars e2))
-free_vars (Ext (Fix e))                 = free_vars e
-free_vars (Ext (Pair e1 e2))            = free_vars e1 `Set.union` free_vars e2
-free_vars (Ext (Fst e))                 = free_vars e
-free_vars (Ext (Snd e))                 = free_vars e
-free_vars (Ext (Inl e))                 = free_vars e
-free_vars (Ext (Inr e))                 = free_vars e
-free_vars (Ext (Case e (x,e1) (y,e2)))  =
-  free_vars e `Set.union` (Set.delete x (free_vars e1)) `Set.union` (Set.delete y (free_vars e2))
-free_vars (Ext _)                       = Set.empty
+instance Term (Expr PCF) where
+  boundVars (Abs var e)                  = var `Set.insert` boundVars e
+  boundVars (TyAbs var e)                = var `Set.insert` boundVars e
+  boundVars (TyEmbed t)                  = boundVars t
+  boundVars (App e1 e2)                  = boundVars e1 `Set.union` boundVars e2
+  boundVars (Var var)                    = Set.empty
+  boundVars (Sig e _)                    = boundVars e
+  boundVars (Ext (NatCase e e1 (x,e2)))  =
+    x `Set.insert` (boundVars e `Set.union` boundVars e1 `Set.union` boundVars e2)
+  boundVars (Ext (Fix e))                = boundVars e
+  boundVars (Ext (Pair e1 e2))           = boundVars e1 `Set.union` boundVars e2
+  boundVars (Ext (Fst e))                = boundVars e
+  boundVars (Ext (Snd e))                = boundVars e
+  boundVars (Ext (Inl e))                = boundVars e
+  boundVars (Ext (Inr e))                = boundVars e
+  boundVars (Ext (Case e (x,e1) (y,e2))) =
+    boundVars e `Set.union` (x `Set.insert` boundVars e1) `Set.union` (y `Set.insert` boundVars e2)
+  boundVars (Ext _)                      = Set.empty
 
-----------------------------
+  freeVars (Abs var e)                   = Set.delete var (freeVars e)
+  freeVars (TyAbs var e)                 = Set.delete var (freeVars e)
+  freeVars (TyEmbed t)                   = freeVars t
+  freeVars (App e1 e2)                   = freeVars e1 `Set.union` freeVars e2
+  freeVars (Var var)                     = Set.singleton var
+  freeVars (Sig e _)                     = freeVars e
+  freeVars (Ext (NatCase e e1 (x,e2)))   =
+    freeVars e `Set.union` freeVars e1 `Set.union` (Set.delete x (freeVars e2))
+  freeVars (Ext (Fix e))                 = freeVars e
+  freeVars (Ext (Pair e1 e2))            = freeVars e1 `Set.union` freeVars e2
+  freeVars (Ext (Fst e))                 = freeVars e
+  freeVars (Ext (Snd e))                 = freeVars e
+  freeVars (Ext (Inl e))                 = freeVars e
+  freeVars (Ext (Inr e))                 = freeVars e
+  freeVars (Ext (Case e (x,e1) (y,e2)))  =
+    freeVars e `Set.union` (Set.delete x (freeVars e1)) `Set.union` (Set.delete y (freeVars e2))
+  freeVars (Ext _)                       = Set.empty
+
+  mkVar = Var
+
+instance Term Type where
+  boundVars (FunTy t1 t2)  = boundVars t1 `Set.union` boundVars t2
+  boundVars (ProdTy t1 t2) = boundVars t1 `Set.union` boundVars t2
+  boundVars (SumTy t1 t2)  = boundVars t1 `Set.union` boundVars t2
+  boundVars NatTy          = Set.empty
+  boundVars (TyVar var)    = Set.empty
+  boundVars (Forall var t) = var `Set.insert` boundVars t
+
+  freeVars (FunTy t1 t2)  = freeVars t1 `Set.union` freeVars t2
+  freeVars (ProdTy t1 t2) = freeVars t1 `Set.union` freeVars t2
+  freeVars (SumTy t1 t2)  = freeVars t1 `Set.union` freeVars t2
+  freeVars NatTy          = Set.empty
+  freeVars (TyVar var)    = Set.singleton var
+  freeVars (Forall var t) = var `Set.delete` freeVars t
+
+  mkVar = TyVar
+
+  ----------------------------
 -- Fresh variable with respect to a set of variables
 -- By adding apostrophes to a supplied initial variable
 
