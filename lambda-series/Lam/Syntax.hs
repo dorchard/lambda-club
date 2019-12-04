@@ -18,8 +18,9 @@ data Expr ex where
 
     Sig :: Expr ex -> Type       -> Expr ex -- e : A
 
-    TyAbs   :: Identifier -> Expr ex -> Expr ex -- /\ A -> e
-    TyEmbed :: Type                  -> Expr ex -- .A
+    -- Poly
+    TyAbs   :: Identifier -> Expr ex -> Expr ex -- /\ a -> e
+    TyEmbed :: Type                  -> Expr ex -- @A
 
     -- Extend the ast at this point
     Ext :: ex -> Expr ex

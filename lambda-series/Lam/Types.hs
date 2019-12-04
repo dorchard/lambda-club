@@ -2,7 +2,7 @@ module Lam.Types where
 
 import Lam.Syntax
 import Lam.PrettyPrint
-import Lam.Semantics (substituteType)
+--import Lam.Semantics (substituteType)
 
 {-
 

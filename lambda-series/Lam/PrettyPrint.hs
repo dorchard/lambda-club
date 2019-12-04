@@ -34,7 +34,7 @@ instance PrettyPrint ex => PrettyPrint (Expr ex) where
     pprint (Ext e) = pprint e
     -- Poly
     pprint (TyAbs var e) = "/\\" ++ var ++ " -> " ++ pprint e
-    pprint (TyEmbed t) = "." ++ bracket_pprint t
+    pprint (TyEmbed t) = "@" ++ bracket_pprint t
 
 instance PrettyPrint PCF where
     isLexicallyAtomic Zero    = True

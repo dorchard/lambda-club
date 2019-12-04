@@ -27,7 +27,7 @@ fullBeta :: Reducer (Expr PCF)
 fullBeta (Var _) = Nothing
 fullBeta (App (Abs x e) e') = beta e x e'
 -- Poly beta
-fullBeta (App (TyAbs var e) (TyEmbed t)) = beta e var (TyEmbed t)
+fullBeta (App (TyAbs alpha e) (TyEmbed t)) = beta e alpha (TyEmbed t)
 fullBeta (App e1 e2) =
   -- Prefer fully zeta1 reducing before zeta2 reducing
   case zeta1 fullBeta e1 e2 of

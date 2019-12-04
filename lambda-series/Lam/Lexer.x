@@ -66,6 +66,7 @@ tokens :-
   ">"                           { \p s -> TokenRPair p }
   ", "                          { \p s -> TokenMPair p }
   \.                            { \p _ -> TokenDot p }
+  \@                            { \p _ -> TokenAt p }
 
 {
 
@@ -103,6 +104,7 @@ data Token
   | TokenInr      AlexPosn
   | TokenForall   AlexPosn
   | TokenDot      AlexPosn
+  | TokenAt       AlexPosn
   deriving (Eq, Show, Generic)
 
 symString :: Token -> String

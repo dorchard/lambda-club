@@ -53,6 +53,7 @@ import Lam.Options
     '>'     { TokenRPair _ }
     ', '    { TokenMPair _ }
     '.'     { TokenDot _ }
+    '@'     { TokenAt _ }
 
 %right in
 %right '->'
@@ -183,7 +184,7 @@ Atom :: { [Option] -> Expr PCF }
           then Ext Succ
           else Var "succ" }
 
-  | '.' TypeAtom
+  | '@' TypeAtom
     { \opts ->
         if isPoly opts
           then TyEmbed ($2 opts)
