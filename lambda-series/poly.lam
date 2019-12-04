@@ -1,0 +1,9 @@
+lang.poly
+lang.typed
+
+id = (/\ a -> (\x -> x) : a -> a) : forall a . a -> a
+
+x = id .Nat
+y = id .(Nat -> Nat) x
+
+y zero
