@@ -2,7 +2,10 @@ module Lam.Types where
 
 import Lam.Syntax
 import Lam.PrettyPrint
---import Lam.Semantics (substituteType)
+import Lam.Semantics (substituteType)
+
+import Data.Maybe (mapMaybe)
+import Data.List (intercalate)
 
 {-
 
@@ -88,6 +91,20 @@ check gamma (Ext (Case e (x,e1) (y,e2))) t =
       check ([(y,t2)] ++ gamma) e2 t
     _ -> False
 
+-- Polymorphic lambda calculus
+check gamma (TyAbs alpha e) (Forall alpha' tau)
+  | alpha == alpha' =
+    -- find all free variables in gamma which have alpha free inside of their type assumption
+    case mapMaybe (\(id, t) -> if alpha `elem` freeVars t then Just id else Nothing) gamma of
+      -- side condition is true
+      [] -> check gamma e tau
+      vars -> error $ "Free variables " <> intercalate "," vars
+                  <> " use bound type variable `" <> alpha <> "`"
+
+  | otherwise =
+    error $ "Term-level type abstraction on `" <> alpha
+          <> "` does not match name of type abstraction `" <> alpha' <> "`"
+
 {--
 
 G |- e => A'   A' == A
@@ -144,6 +161,12 @@ synth gamma (App (Abs x e1) (Sig e2 tyA)) =
   if check gamma e2 tyA
     then synth ([(x, tyA)] ++ gamma) e1
     else error $ "Expecting (" ++ pprint e2 ++ ") to have type " ++ pprint tyA
+
+synth gamma (App e (TyEmbed tau')) =
+  case synth gamma e of
+    Just (Forall alpha tau) -> Just $ substituteType tau (alpha, tau')
+    Just t -> error $ "Expecting polymorphic type but got `" <> pprint t <> "`"
+    Nothing -> error $ "Expecting polymorphic type but didn't get anything."
 
 {-
 

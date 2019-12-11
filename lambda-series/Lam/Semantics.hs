@@ -213,15 +213,17 @@ substituteType (FunTy t1 t2) s =
   FunTy (substituteType t1 s) (substituteType t2 s)
 
 substituteType NatTy s = NatTy
+
 substituteType (ProdTy t1 t2) s =
   ProdTy (substituteType t1 s) (substituteType t2 s)
+
 substituteType (SumTy t1 t2) s =
   SumTy (substituteType t1 s) (substituteType t2 s)
 
 -- Actual substitution happening here
-substituteType (TyVar var) (x, t)
-  | var == x  = t
-  | otherwise = TyVar var
+substituteType (TyVar var) (varS, t)
+  | var == varS  = t
+  | otherwise    = TyVar var
 
 substituteType (Forall var t) s =
   let (var', t') = substitute_binding var t s in Forall var' t'
