@@ -26,6 +26,10 @@ See `simple.lam` and `test.lam`.
  - [x] Session 6: PCF and PCF typing
  - [x] Session 7: The Curry-Howard correspondence in more detail (types vs. logic)
  - [x] Session 8: Call-By-Value vs. Call-By-Name reduction.
- - [ ] Session 9: Polymorphism (System F)
- - [ ] Session 10: Implementing polymorphic types (Hindley-Milner algorithm 
+ - [x] Session 9: Polymorphism (System F)
+ - [x] Session 10: Polymorphic lambda-calculus typing and Theorems for Free.
+ 
+ ---------------------------------------------
+ 
+ - [ ] Session Y: Implementing ML-style polymorphic types (Hindley-Milner algorithm 
     and related).
