@@ -51,7 +51,12 @@ G, x : A |- e <= B
 G |- (\x -> e) <= A -> B
 
 -}
-check gamma (Abs x expr) (FunTy tyA tyB) =
+-- Curry style
+check gamma (Abs x Nothing expr) (FunTy tyA tyB) =
+  check ([(x, tyA)] ++ gamma) expr tyB
+
+-- Church style
+check gamma (Abs x (Just tyA') expr) (FunTy tyA tyB) | tyA == tyA' =
   check ([(x, tyA)] ++ gamma) expr tyB
 
 --- PCF rules
@@ -157,11 +162,17 @@ i.e., we know we have a signature for the argument.
 -}
 
 -- app (special for form of top-level definitions)
-synth gamma (App (Abs x e1) (Sig e2 tyA)) =
+synth gamma (App (Abs x Nothing e1) (Sig e2 tyA)) =
   if check gamma e2 tyA
     then synth ([(x, tyA)] ++ gamma) e1
     else error $ "Expecting (" ++ pprint e2 ++ ") to have type " ++ pprint tyA
 
+
+-- abs-Church (actually rule)
+synth gamma (Abs x (Just tyA) e) =
+  synth ((x, tyA) : gamma) e
+
+-- Type checking a type speciaisation
 synth gamma (App e (TyEmbed tau')) =
   case synth gamma e of
     Just (Forall alpha tau) -> Just $ substituteType tau (alpha, tau')

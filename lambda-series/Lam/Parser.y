@@ -78,22 +78,25 @@ NL :: { () }
   | nl                        { }
 
 Def :: { [Option] -> Expr PCF -> Expr PCF }
-  : VAR '=' Expr { \opts -> \program -> App (Abs (symString $1) program) ($3 opts) }
+  : VAR '=' Expr { \opts -> \program -> App (Abs (symString $1) Nothing program) ($3 opts) }
   | zero '=' Expr { \opts ->
         if isPCF opts
           then error "Cannot use 'zero' as a variable name"
-          else \program -> App (Abs "zero" program) ($3 opts) }
+          else \program -> App (Abs "zero" Nothing program) ($3 opts) }
   | succ '=' Expr { \opts ->
         if isPCF opts
           then error "Cannot use 'succ' as a variable name"
-          else  \program -> App (Abs "succ" program) ($3 opts) }
+          else  \program -> App (Abs "succ" Nothing program) ($3 opts) }
 
 Expr :: { [Option] -> Expr PCF }
   : let VAR '=' Expr in Expr
-    { \opts -> App (Abs (symString $2) ($6 opts)) ($4 opts) }
+    { \opts -> App (Abs (symString $2) Nothing ($6 opts)) ($4 opts) }
+
+  | '\\' '(' VAR ':' Type ')' '->' Expr
+    { \opts -> Abs (symString $3) (Just ($5 opts)) ($8 opts) }
 
   | '\\' VAR '->' Expr
-    { \opts -> Abs (symString $2) ($4 opts) }
+    { \opts -> Abs (symString $2) Nothing ($4 opts) }
 
   | Lam VAR '->' Expr
     { \opts -> TyAbs (symString $2) ($4 opts) }

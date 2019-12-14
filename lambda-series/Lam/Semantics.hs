@@ -25,7 +25,7 @@ multiStep' step t n =
 
 fullBeta :: Reducer (Expr PCF)
 fullBeta (Var _) = Nothing
-fullBeta (App (Abs x e) e') = beta e x e'
+fullBeta (App (Abs x _ e) e') = beta e x e'
 -- Poly beta
 fullBeta (App (TyAbs alpha e) (TyEmbed t)) = beta e alpha (TyEmbed t)
 fullBeta (App e1 e2) =
@@ -33,7 +33,7 @@ fullBeta (App e1 e2) =
   case zeta1 fullBeta e1 e2 of
     Just e -> Just e
     Nothing -> zeta2 fullBeta e1 e2
-fullBeta (Abs x e) = zeta3 fullBeta x e
+fullBeta (Abs x _ e) = zeta3 fullBeta x e
 fullBeta (Sig e _) = Just e
 fullBeta (Ext e) = reducePCF fullBeta (Ext e)
 -- Poly
@@ -43,27 +43,27 @@ fullBeta (TyEmbed t) = Nothing
 
 callByName :: Reducer (Expr PCF)
 callByName (Var _) = Nothing
-callByName (App (Abs x e) e') = beta e x e'
+callByName (App (Abs x _ e) e') = beta e x e'
 -- Poly beta
 callByName (App (TyAbs var e) (TyEmbed t)) = beta e var (TyEmbed t)
 callByName (App e1 e2) = zeta1 callByName e1 e2
-callByName (Abs x e) = Nothing
-callByName (Sig e _) = Just e
-callByName (Ext e) = reducePCF callByName (Ext e)
+callByName (Abs x _ e) = Nothing
+callByName (Sig e _)   = Just e
+callByName (Ext e)    = reducePCF callByName (Ext e)
 -- Poly
 callByName (TyAbs x e) = Nothing
 callByName (TyEmbed t) = Nothing
 
 callByValue :: Reducer (Expr PCF)
 callByValue (Var _) = Nothing
-callByValue (App (Abs x e) e') | isValue e' = beta e x e'
+callByValue (App (Abs x _ e) e') | isValue e' = beta e x e'
 -- Poly beta
 callByValue (App (TyAbs var e) (TyEmbed t)) = beta e var (TyEmbed t)
 callByValue (App e1 e2) | isValue e1 = zeta2 callByValue e1 e2
 callByValue (App e1 e2) = zeta1 callByValue e1 e2
-callByValue (Abs x e) = Nothing
-callByValue (Sig e _) = Just e
-callByValue (Ext e) = reducePCF callByValue (Ext e)
+callByValue (Abs x _ e) = Nothing
+callByValue (Sig e _)   = Just e
+callByValue (Ext e)     = reducePCF callByValue (Ext e)
 -- Poly
 callByValue (TyAbs x e) = Nothing
 callByValue (TyEmbed t) = Nothing
@@ -80,7 +80,7 @@ zeta2 :: Reducer (Expr PCF)  -> Expr PCF -> Expr PCF -> Maybe (Expr PCF)
 zeta2 step e1 e2 = (\e2' -> App e1 e2') <$> step e2
 
 zeta3 :: Reducer (Expr PCF)  -> Identifier -> Expr PCF -> Maybe (Expr PCF)
-zeta3 step x e = (\e' -> Abs x e') <$> step e
+zeta3 step x e = (\e' -> Abs x Nothing e') <$> step e
 
 zeta3Ty :: Reducer (Expr PCF)  -> Identifier -> Expr PCF -> Maybe (Expr PCF)
 zeta3Ty step x e = (\e' -> TyAbs x e') <$> step e
@@ -148,8 +148,8 @@ substituteExpr (Var y) (x, e')
 substituteExpr (App e1 e2) s =
   App (substituteExpr e1 s) (substituteExpr e2 s)
 
-substituteExpr (Abs y e) s =
-  let (y', e') = substitute_binding y e s in Abs y' e'
+substituteExpr (Abs y mt e) s =
+  let (y', e') = substitute_binding y e s in Abs y' mt e'
 
 substituteExpr (Sig e t) s = Sig (substituteExpr e s) t
 

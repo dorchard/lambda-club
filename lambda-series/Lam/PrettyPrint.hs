@@ -22,9 +22,10 @@ instance PrettyPrint ex => PrettyPrint (Expr ex) where
     isLexicallyAtomic (Ext e) = isLexicallyAtomic e
     isLexicallyAtomic _       = False
 
-    pprint (Abs var e) = "\\" ++ var ++ " -> " ++ pprint e
-    pprint (App (Abs var e1) e2) =
-      bracket_pprint (Abs var e1) ++ " " ++ bracket_pprint e2
+    pprint (Abs var Nothing e)  = "\\" ++ var ++ " -> " ++ pprint e
+    pprint (Abs var (Just t) e) = "\\ (" ++ var ++ " : " ++ pprint t ++ ") -> " ++ pprint e
+    pprint (App (Abs var mt e1) e2) =
+      bracket_pprint (Abs var mt e1) ++ " " ++ bracket_pprint e2
     pprint (App (Sig e1 t) e2) =
       bracket_pprint (Sig e1 t) ++ " " ++ bracket_pprint e2
     pprint (App e1 e2) = pprint e1 ++ " " ++ bracket_pprint e2

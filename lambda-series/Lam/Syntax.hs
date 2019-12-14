@@ -12,7 +12,10 @@ type Identifier = String
 -- used to represent the abstract syntax
 -- tree of additional commands
 data Expr ex where
-    Abs :: Identifier -> Expr ex -> Expr ex -- \x -> e  [λ x . e]
+    Abs :: Identifier -> Maybe Type -> Expr ex -> Expr ex
+                                            -- \x -> e  [λ x . e] (Curry style)
+                                            -- or
+                                            -- \(x : A) -> e (Church style)
     App :: Expr ex ->  Expr ex   -> Expr ex -- e1 e2
     Var :: Identifier            -> Expr ex -- x
 
@@ -46,9 +49,9 @@ data PCF =
   deriving Show
 
 isValue :: Expr PCF -> Bool
-isValue (Abs _ _) = True
-isValue (Var _)   = True
-isValue e         = isNatVal e
+isValue (Abs _ _ _) = True
+isValue (Var _)     = True
+isValue e           = isNatVal e
 
 isNatVal :: Expr PCF -> Bool
 isNatVal (Ext Zero)  = True
@@ -81,7 +84,7 @@ class Term t where
   mkVar     :: Identifier -> t
 
 instance Term (Expr PCF) where
-  boundVars (Abs var e)                  = var `Set.insert` boundVars e
+  boundVars (Abs var _ e)                = var `Set.insert` boundVars e
   boundVars (TyAbs var e)                = var `Set.insert` boundVars e
   boundVars (TyEmbed t)                  = boundVars t
   boundVars (App e1 e2)                  = boundVars e1 `Set.union` boundVars e2
@@ -99,7 +102,7 @@ instance Term (Expr PCF) where
     boundVars e `Set.union` (x `Set.insert` boundVars e1) `Set.union` (y `Set.insert` boundVars e2)
   boundVars (Ext _)                      = Set.empty
 
-  freeVars (Abs var e)                   = Set.delete var (freeVars e)
+  freeVars (Abs var _ e)                 = Set.delete var (freeVars e)
   freeVars (TyAbs var e)                 = Set.delete var (freeVars e)
   freeVars (TyEmbed t)                   = freeVars t
   freeVars (App e1 e2)                   = freeVars e1 `Set.union` freeVars e2
