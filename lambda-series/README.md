@@ -9,7 +9,7 @@ Get stack here: http://docs.haskellstack.org/en/stable/README/
 
 ## Example programs
 
-See `simple.lam` and `test.lam`.
+See `programs/simple.lam` and `test.lam`.
 
 ## Rough idea for the list of topics:
     
