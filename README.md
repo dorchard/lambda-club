@@ -3,7 +3,7 @@ meeting of functional programming enthusiasts at the School of Computing,
 University of Kent. LambdaClub meets on Wednesdays at 2pm during term time
 (usually in SW101, but sometimes elsewhere)
 and is open to all at the University. Sign up to the mailing list at 
-https://lists.kent.ac.uk/sympa/modindex/lambda-club
+https://lists.kent.ac.uk/sympa/info/lambda-club
 
 Index of content, in reverse chronological order
 
