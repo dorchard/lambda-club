@@ -49,9 +49,10 @@ data PCF =
   deriving Show
 
 isValue :: Expr PCF -> Bool
-isValue (Abs _ _ _) = True
-isValue (Var _)     = True
-isValue e           = isNatVal e
+isValue Abs{}   = True
+isValue TyAbs{} = True
+isValue Var{}   = True
+isValue e       = isNatVal e
 
 isNatVal :: Expr PCF -> Bool
 isNatVal (Ext Zero)  = True
