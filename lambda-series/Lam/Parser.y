@@ -66,7 +66,8 @@ Program :: { (Expr PCF, [Option]) }
   : LangOpts Defs  { ($2 $1, $1) }
 
 LangOpts :: { [Option] }
-  : LANG nl LangOpts    {% (readOption $1) >>= (\opt -> addOption opt $3) }
+  : LANG NL LangOpts    {% (readOption $1) >>= (\opt -> addOption opt $3) }
+  | LANG                {% readOption $1 >>= (return . (:[])) }
   | {- empty -}         { [] }
 
 Defs :: { [Option] -> Expr PCF }
