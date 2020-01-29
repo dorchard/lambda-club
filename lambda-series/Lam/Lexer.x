@@ -36,7 +36,7 @@ tokens :-
   $white+                       ;
   "--".*                        ;
   @constr                       { \p s -> TokenConstr p s }
-  lang.@langPrag                { \p s -> TokenLang p s }
+  lang\.@langPrag               { \p s -> TokenLang p s }
   forall                        { \p _ -> TokenForall p }
   let                           { \p s -> TokenLet p }
   in                            { \p s -> TokenIn p }

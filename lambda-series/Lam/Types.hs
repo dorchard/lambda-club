@@ -291,4 +291,4 @@ synth gamma (Sig e ty) =
 
 -- catch all (cannot synth here)
 synth gamma e =
-   error $ "Cannot synth for " ++ pprint e
+   error $ "Cannot synth the type for " ++ pprint e
