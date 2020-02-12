@@ -81,11 +81,11 @@ NL :: { () }
 Def :: { [Option] -> Expr PCF -> Expr PCF }
   : VAR '=' Expr { \opts -> \program -> App (Abs (symString $1) Nothing program) ($3 opts) }
   | zero '=' Expr { \opts ->
-        if isPCF opts
+        if isPCF opts || isML opts
           then error "Cannot use 'zero' as a variable name"
           else \program -> App (Abs "zero" Nothing program) ($3 opts) }
   | succ '=' Expr { \opts ->
-        if isPCF opts
+        if isPCF opts || isML opts
           then error "Cannot use 'succ' as a variable name"
           else  \program -> App (Abs "succ" Nothing program) ($3 opts) }
 
@@ -93,7 +93,7 @@ Expr :: { [Option] -> Expr PCF }
   : let VAR '=' Expr in Expr
     { \opts ->
       if isML opts
-       then GenLet (symString $2) ($6 opts) ($4 opts)
+       then GenLet (symString $2) ($4 opts) ($6 opts)
        else App (Abs (symString $2) Nothing ($6 opts)) ($4 opts) }
 
   | '\\' '(' VAR ':' Type ')' '->' Expr
@@ -112,43 +112,43 @@ Expr :: { [Option] -> Expr PCF }
 
   | fix '(' Expr ')'
      { \opts ->
-      if isPCF opts
+      if isPCF opts || isML opts
         then Ext (Fix ($3 opts))
         else error "`fix` doesn't exists in the lambda calculus" }
 
   | natcase Expr of zero '->' Expr '|' succ VAR '->' Expr
      { \opts ->
-          if isPCF opts
+          if isPCF opts || isML opts
             then Ext (NatCase ($2 opts) ($6 opts) (symString $9, ($11 opts)))
             else error "`natcase` doesn't exist in the lambda calculus" }
 
   | fst '(' Expr ')'
      { \opts ->
-      if isPCF opts
+      if isPCF opts || isML opts
         then Ext (Fst ($3 opts))
         else error "`fst` doesn't exists in the lambda calculus" }
 
   | snd '(' Expr ')'
      { \opts ->
-      if isPCF opts
+      if isPCF opts || isML opts
         then Ext (Snd ($3 opts))
         else error "`snd` doesn't exists in the lambda calculus" }
 
   | inl '(' Expr ')'
      { \opts ->
-      if isPCF opts
+      if isPCF opts || isML opts
         then Ext (Inl ($3 opts))
         else error "`inl` doesn't exists in the lambda calculus" }
 
   | inr '(' Expr ')'
      { \opts ->
-      if isPCF opts
+      if isPCF opts || isML opts
         then Ext (Inr ($3 opts))
         else error "`inr` doesn't exists in the lambda calculus" }
 
  | case Expr of inl VAR '->' Expr '|' inr VAR '->' Expr
      { \opts ->
-          if isPCF opts
+          if isPCF opts || isML opts
             then Ext (Case ($2 opts) (symString $5, $7 opts) (symString $10, ($12 opts)))
             else error "`case` doesn't exist in the lambda calculus" }
 
@@ -182,12 +182,12 @@ Atom :: { [Option] -> Expr PCF }
   | VAR                       { \opts -> Var $ symString $1 }
   | zero
     { \opts ->
-        if isPCF opts
+        if isPCF opts || isML opts
           then Ext Zero
           else Var "zero" }
   | succ
     { \opts ->
-        if isPCF opts
+        if isPCF opts || isML opts
           then Ext Succ
           else Var "succ" }
 
@@ -199,7 +199,7 @@ Atom :: { [Option] -> Expr PCF }
 
   | '<' Expr ', ' Expr '>'
      { \opts ->
-          if isPCF opts
+          if isPCF opts || isML opts
             then Ext (Pair ($2 opts) ($4 opts))
             else error "pairs don't exists in the lambda calculus"}
 

@@ -4,5 +4,4 @@ lang.typed
 
 id = (/\ a -> (\(x : a) -> x)) : forall a . a -> a
 
---(id @((Nat * Nat) -> (Nat * Nat)) (id @Nat)) zero
 (id @(Nat -> Nat) (id @Nat)) zero
