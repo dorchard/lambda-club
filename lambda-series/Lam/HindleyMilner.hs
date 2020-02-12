@@ -5,9 +5,11 @@ module Lam.HindleyMilner where
 
 import Lam.Syntax
 import Lam.PrettyPrint
-import Data.Set (toList)
+import Data.Set (toList, unions, (\\))
 
 data TypeScheme = ForallTy [Identifier] Type
+unpackType :: TypeScheme -> Type
+unpackType (ForallTy _ ty) = ty
 
 type Context = [(Identifier, TypeScheme)]
 
@@ -17,11 +19,6 @@ inferType ctxt ast = let (s, ty, _) = infer ctxt ast 0 in Just (substitute s ty)
 
 type TypeVariable = String
 type Substitution = TypeVariable -> Type
-
--- error helper
-unificationUnknown :: String -> TypeVariable -> a
-unificationUnknown msg var =
-  error $ "Unification variable in " ++ msg ++ " unknown for " ++ var
 
 -- Inner main function of Algorithm W
 -- Takes:
@@ -39,33 +36,32 @@ infer ctxt (Abs var _ e) fv =
   in (s, FunTy (s alpha) tyB, fv')
 
 infer ctxt (App e1 e2) fv =
-  let (s1 , t1, fv') = infer ctxt e1 fv
-      (s2, t2, fv'') = infer ctxt e2 fv'
+  let (s1, t1, fv') = infer ctxt e1 fv
+      (s2, t2, fv'') = infer (substitute s1 ctxt) e2 fv'
       alpha          = "a" ++ show fv''
-  in do
-    case mgu (substitute s2 t1) (FunTy t2 (TyVar alpha)) of
-      Just s3 -> (s3 <.> s2 <.> s1, s3 alpha, fv''+1)
-      _ -> error "Cannot unify in app"
+      s3 = mgu (substitute s2 t1) (FunTy t2 (TyVar alpha))
+  in (s3 <.> s2 <.> s1, s3 alpha, fv'' + 1)
 
 infer ctxt (Var x) fv =
     case lookup x ctxt of
-      Just (ForallTy alphas ty) -> 
+      Just (ForallTy alphas ty) ->
         let (tyFreshened, fv') = freshen alphas ty fv
-        in (empty, tyFreshened, fv')
+        in (idSubst, tyFreshened, fv')
       Nothing -> error $ "I don't know the type of " ++ x
   where
     freshen [] ty fv = (ty, fv)
-    freshen (x:xs) ty fv = 
-      freshen xs (substitute (singleton x (TyVar $ "a" ++ show fv)) ty) (fv + 1)
+    freshen (x:xs) ty fv =
+      freshen xs (substitute (singletonSubst x (TyVar $ "a" ++ show fv)) ty) (fv + 1)
 
 infer ctxt (GenLet x e1 e2) fv =
   let (s1, t1, fv') = infer ctxt e1 fv
-      alphas = freeVars t1 -- setminus ftv(substitute s1 ctxt)
+      freeTyVarsOfContext = unions $ map (freeVars . unpackType . snd) (substitute s1 ctxt)
+      alphas = freeVars t1 \\ freeTyVarsOfContext
       (s2, t2, fv'') = infer ((x, ForallTy (toList alphas) t1) : substitute s1 ctxt) e2 fv'
   in (s2 <.> s1, t2, fv'')
 
-infer ctxt (Ext Zero) fv = (empty, NatTy, fv)
-infer ctxt (Ext Succ) fv = (empty, FunTy NatTy NatTy, fv)
+infer ctxt (Ext Zero) fv = (idSubst, NatTy, fv)
+infer ctxt (Ext Succ) fv = (idSubst, FunTy NatTy NatTy, fv)
 
 infer ctxt t fv = 
   error $ "I don't know how to infer the type of " ++ pprint t
@@ -80,15 +76,15 @@ infer ctxt t fv =
 -- {a -> Int} <.> {b -> (a, Int)}
 --    = {b -> (Int, Int), a -> Int}
 
-empty :: Substitution
-empty var = TyVar var
+idSubst :: Substitution
+idSubst var = TyVar var
 
-singleton :: TypeVariable -> Type -> Substitution
-singleton var ty =
+singletonSubst :: TypeVariable -> Type -> Substitution
+singletonSubst var ty =
   \var' -> if var == var' then ty else TyVar var'
 
--- empty <.> s = s
--- s <.> empty = s
+-- idSubst <.> s = s
+-- s <.> idSubst = s
 
 -- substitute s2 (substitute s1 t) =
 --  substitute (s2 <.> s1) t
@@ -101,24 +97,22 @@ s2 <.> s1 =
       else substitute s2 (s1 v)
 
 -- Calculate the most general unified of two types
-mgu :: Type -> Type -> Maybe Substitution
-mgu (FunTy t1 t2) (FunTy t1' t2') = do
-  s <- mgu t1 t1'
-  s' <- mgu t2 t2'
-  Just $ s <.> s'
-mgu (ProdTy t1 t2) (ProdTy t1' t2') = do
-  s <- mgu t1 t1'
-  s' <- mgu t2 t2'
-  Just $ s <.> s'
-mgu (SumTy t1 t2) (SumTy t1' t2') = do
-  case mgu t1 t1' of
-    Just s -> case mgu t2 t2' of
-               Just s' -> Just $ s <.> s'
-               Nothing -> Nothing
-    Nothing -> Nothing
-mgu NatTy NatTy = Just empty
-mgu (TyVar a) ty = Just $ singleton a ty
-mgu ty (TyVar a) = Just $ singleton a ty
+mgu :: Type -> Type -> Substitution
+mgu (FunTy t1 t2) (FunTy t1' t2') =
+  let s = mgu t1 t1'
+      s' = mgu (substitute s t2) (substitute s t2')
+  in s' <.> s
+mgu (ProdTy t1 t2) (ProdTy t1' t2') =
+  let s  = mgu t1 t1'
+      s' = mgu (substitute s t2) (substitute s t2')
+  in s' <.> s
+mgu (SumTy t1 t2) (SumTy t1' t2') =
+  let s = mgu t1 t1'
+      s' = mgu (substitute s t2) (substitute s t2')
+  in s' <.> s
+mgu NatTy NatTy  = idSubst
+mgu (TyVar a) ty = singletonSubst a ty
+mgu ty (TyVar a) = singletonSubst a ty
 mgu t1 t2 = error $ "Cannot unify " ++ pprint t1 ++ " and " ++ pprint t2
 
 
