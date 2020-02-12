@@ -27,6 +27,7 @@ executable lcore
       Lam.Semantics
       Lam.Syntax
       Lam.Types
+      Lam.HindleyMilner
       Paths_lambda_core
   hs-source-dirs:
       ./.

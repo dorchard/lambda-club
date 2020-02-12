@@ -39,6 +39,8 @@ fullBeta (Ext e) = reducePCF fullBeta (Ext e)
 -- Poly
 fullBeta (TyAbs x e) = zeta3Ty fullBeta x e
 fullBeta (TyEmbed t) = Nothing
+-- ML
+fullBeta (GenLet x e' e) = beta e x e'
 
 
 callByName :: Reducer (Expr PCF)
@@ -53,6 +55,8 @@ callByName (Ext e)    = reducePCF callByName (Ext e)
 -- Poly
 callByName (TyAbs x e) = Nothing
 callByName (TyEmbed t) = Nothing
+-- ML
+callByName (GenLet x e' e) = beta e x e'
 
 callByValue :: Reducer (Expr PCF)
 callByValue (Var _) = Nothing
@@ -67,6 +71,10 @@ callByValue (Ext e)     = reducePCF callByValue (Ext e)
 -- Poly
 callByValue (TyAbs x e) = Nothing
 callByValue (TyEmbed t) = Nothing
+-- ML
+callByValue (GenLet x e' e)
+  | isValue e' = beta e x e'
+  | otherwise = (callByValue e') >>= (\e' -> return $ GenLet x e' e)
 
 -- Base case
 beta :: (Substitutable t) => t -> Identifier -> t -> Maybe t
@@ -152,6 +160,11 @@ substituteExpr (Abs y mt e) s =
   let (y', e') = substitute_binding y e s in Abs y' mt e'
 
 substituteExpr (Sig e t) s = Sig (substituteExpr e s) t
+
+-- ML
+
+substituteExpr (GenLet x e1 e2) s =
+  let (x' , e2') = substitute_binding x e2 s in GenLet x' (substituteExpr e1 s) e2'
 
 -- PCF terms
 substituteExpr (Ext Zero) s = Ext Zero

@@ -91,7 +91,10 @@ Def :: { [Option] -> Expr PCF -> Expr PCF }
 
 Expr :: { [Option] -> Expr PCF }
   : let VAR '=' Expr in Expr
-    { \opts -> App (Abs (symString $2) Nothing ($6 opts)) ($4 opts) }
+    { \opts ->
+      if isML opts
+       then GenLet (symString $2) ($6 opts) ($4 opts)
+       else App (Abs (symString $2) Nothing ($6 opts)) ($4 opts) }
 
   | '\\' '(' VAR ':' Type ')' '->' Expr
     { \opts -> Abs (symString $3) (Just ($5 opts)) ($8 opts) }
@@ -209,6 +212,7 @@ Atom :: { [Option] -> Expr PCF }
 
 readOption :: Token -> ReaderT String (Either String) Option
 readOption (TokenLang _ x) | x == "lang.pcf"   = return PCF
+readOption (TokenLang _ x) | x == "lang.ml"    = return ML
 readOption (TokenLang _ x) | x == "lang.typed" = return Typed
 readOption (TokenLang _ x) | x == "lang.poly"  = return Poly
 readOption (TokenLang _ x) | x == "lang.cbv"   = return CBV

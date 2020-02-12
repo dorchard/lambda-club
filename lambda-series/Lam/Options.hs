@@ -6,7 +6,7 @@ import Control.Monad.Trans.Class (lift)
 ------------------------------
 -- Language options that `lcore` accepts in files
 
-data Option = PCF | Typed | CBV | CBN | Poly
+data Option = PCF | Typed | CBV | CBN | Poly | ML
   deriving (Eq, Show)
 
 -- Some helpers
@@ -28,8 +28,11 @@ isTyped options = elem Typed options
 isPoly :: [Option] -> Bool
 isPoly options = elem Poly options
 
+isML :: [Option] -> Bool
+isML options = elem ML options
+
 language :: [Option] -> String
-language options = if isPCF options then "PCF" else "lambda"
+language options = if isPCF options then "PCF" else if isML options then "ML" else "lambda"
 
 -- Builds up a the language option list and checks for conflicting options
 addOption :: Option -> [Option] -> ReaderT String (Either String) [Option]

@@ -4,6 +4,8 @@ import Lam.Options
 import Lam.Parser      (parseProgram)
 import Lam.PrettyPrint (pprint)
 import Lam.Semantics   (multiStep)
+import Lam.Syntax
+import qualified Lam.HindleyMilner as HM
 import Lam.Types
 
 import System.Directory   (doesPathExist)
@@ -44,7 +46,7 @@ main = do
 
               -- Typing
               when (isTyped options)
-                (case synth [] ast of
+                (case typeInference options ast of
                    Nothing -> putStrLn $ "\n " <> ansi_bold <> ansi_red
                                                <> "Not well-typed.\n" <> ansi_reset
                    Just ty -> putStrLn $ "\n " <> ansi_bold <> ansi_green
@@ -53,6 +55,9 @@ main = do
             Left msg -> do
               putStrLn $ ansi_red ++ "Error: " ++ ansi_reset ++ msg
               exitFailure
+
+typeInference :: [Option] -> Expr PCF -> Maybe Type
+typeInference options = if isML options then HM.inferType [] else synth []
 
 ansi_red, ansi_green, ansi_reset, ansi_bold :: String
 ansi_red   = "\ESC[31;1m"
