@@ -2,6 +2,8 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 
 import Prelude hiding (Monad(..))
@@ -69,9 +71,55 @@ interp (Const n) = return n
 
 echo = getLine >>>>= putStrLn
 
-class Monad (m :: * -> *) where
+
+comp :: Monad m => (a -> m b) -> (b -> m c) -> a -> m c
+comp f g = \x -> f x >>= g
+
+-- return `comp` f = f
+-- f `comp` return = f
+-- (f `comp` g) `comp` h = f `comp` (g `comp` h)
+
+-- class Functor (f :: * -> *) where
+--    fmap :: (a -> b) -> f a -> f b
+
+--    fmap id = id
+--    fmap (g . f) = fmap g . fmap f
+
+class Functor m => Monad (m :: * -> *) where
   (>>=) :: m a -> (a -> m b) -> m b
   return :: a -> m a
+  -- (return x) >>= f  ===  f x
+  -- ma >>= return   === ma
+  -- (ma >>= f) >>= g === ma >>= (\x -> f x >>= g)
+
+class MonoidMonad (m :: * -> *) where
+  mmap    :: (a -> b) -> m a -> m b
+  join    :: m (m a) -> m a
+  unit    :: a -> m a
+
+-- join (unit x)      = x   (x :: m a)
+-- join (mmap unit y) = y   (y :: m a)
+-- join (join x) = join . (mmap join x)
+--                          (z :: m (m (m a))
+
+instance MonoidMonad Maybe where
+  unit = Just
+  mmap f Nothing = Nothing
+  mmap f (Just x) = Just (f x)
+  join Nothing         = Nothing
+  join (Just Nothing)  = Nothing
+  join (Just (Just x)) = Just x
+
+instance Monad m => MonoidMonad m where
+  unit = return
+  join = (\ma -> ma >>= id) -- ma :: m (m a)
+                            -- (\ma -> ma >>= id) :: m a
+  mmap f = \ma -> ma >>= (return . f)
+
+instance {-# OVERLAPS #-} MonoidMonad m => Monad m where
+  return = unit
+  -- (>>=) :: m a -> (a -> m b) -> m b
+  ma >>= f = join (mmap f ma)
 
 {-
 
@@ -133,6 +181,7 @@ instance Monad (State s) where
        in (b, s2)
       )
 
+increment :: State Int ()
 increment = do
   x <- get
   put (x + 1)
